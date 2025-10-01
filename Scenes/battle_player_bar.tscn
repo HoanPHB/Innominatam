@@ -1,7 +1,8 @@
-[gd_scene load_steps=6 format=3 uid="uid://cov8frrvqr5jr"]
+[gd_scene load_steps=7 format=3 uid="uid://cov8frrvqr5jr"]
 
 [ext_resource type="Script" uid="uid://bfy2sxvkei3vl" path="res://Scenes/battle_player_bar.gd" id="1_cgp6c"]
 [ext_resource type="PackedScene" uid="uid://dvpwnkiuhgy0" path="res://Scenes/atb.tscn" id="2_wklpr"]
+[ext_resource type="Script" uid="uid://xfkb3ycd1dxn" path="res://addons/turnity/turn_socket.gd" id="3_abcde"]
 
 [sub_resource type="Animation" id="Animation_tr1bu"]
 resource_name = "Highlight"
@@ -41,6 +42,7 @@ _data = {
 }
 
 [node name="BattlePlayerBar" type="HBoxContainer"]
+custom_minimum_size = Vector2(140, 0)
 offset_right = 196.0
 offset_bottom = 25.0
 theme_override_constants/separation = 1
@@ -55,7 +57,7 @@ clip_text = true
 text_overrun_behavior = 3
 
 [node name="Health" type="Label" parent="."]
-custom_minimum_size = Vector2(22, 0)
+custom_minimum_size = Vector2(40, 0)
 layout_mode = 2
 size_flags_horizontal = 0
 text = "9999"
@@ -71,8 +73,13 @@ horizontal_alignment = 2
 [node name="ATB" parent="." instance=ExtResource("2_wklpr")]
 custom_minimum_size = Vector2(28, 5)
 layout_mode = 2
+size_flags_horizontal = 0
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 libraries = {
 &"": SubResource("AnimationLibrary_he11m")
 }
+
+[node name="TurnitySocket" type="Node" parent="."]
+script = ExtResource("3_abcde")
+actor = NodePath("..")

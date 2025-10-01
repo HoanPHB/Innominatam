@@ -98,16 +98,20 @@ theme = ExtResource("4_k7mbx")
 layout_mode = 2
 
 [node name="BattlePlayerBar" parent="Bottom/Players/MarginContainer/VBoxContainer" instance=ExtResource("5_upb72")]
+custom_minimum_size = Vector2(0, 0)
 layout_mode = 2
 
 [node name="BattlePlayerBar2" parent="Bottom/Players/MarginContainer/VBoxContainer" instance=ExtResource("5_upb72")]
+custom_minimum_size = Vector2(0, 0)
 layout_mode = 2
 
 [node name="BattlePlayerBar3" parent="Bottom/Players/MarginContainer/VBoxContainer" instance=ExtResource("5_upb72")]
+custom_minimum_size = Vector2(0, 0)
 layout_mode = 2
 theme = SubResource("Theme_heh15")
 
 [node name="BattlePlayerBar4" parent="Bottom/Players/MarginContainer/VBoxContainer" instance=ExtResource("5_upb72")]
+custom_minimum_size = Vector2(0, 0)
 layout_mode = 2
 
 [node name="Options" parent="." instance=ExtResource("2_f6xt6")]
