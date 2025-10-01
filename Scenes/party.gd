@@ -10,5 +10,5 @@ var player: Dictionary = {
 var party: Array = players.values()
 
 func _ready() -> void:
-	Util.set_key_to_names(players)
+	Util.set_keys_to_names(players)
 	
