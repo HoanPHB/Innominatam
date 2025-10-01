@@ -1,0 +1,246 @@
+[gd_scene load_steps=21 format=3 uid="uid://cncxrpb7yg1i4"]
+
+[ext_resource type="FontFile" uid="uid://vc186hdx1nna" path="res://fonts/PixelSerif_16px_v02.ttf" id="1_oxf17"]
+[ext_resource type="PackedScene" uid="uid://o5kqdnlu4h5l" path="res://Scenes/char_actions.tscn" id="2_f6xt6"]
+[ext_resource type="Script" uid="uid://py0yguv24dta" path="res://Scenes/battle.gd" id="2_ww2ai"]
+[ext_resource type="PackedScene" uid="uid://bju1ij6r86ig0" path="res://Scenes/battle_background.tscn" id="3_heh15"]
+[ext_resource type="PackedScene" uid="uid://b6vkhno0wp8bb" path="res://Scenes/char_status.tscn" id="3_ww2ai"]
+[ext_resource type="Theme" uid="uid://bqtisso1c0ux6" path="res://Theme/default_theme.tres" id="4_k7mbx"]
+[ext_resource type="PackedScene" uid="uid://vh2oh4tr0pno" path="res://Scenes/skill_info.tscn" id="4_lrv64"]
+[ext_resource type="Script" uid="uid://w6v41kk1mh7s" path="res://Scenes/menu.gd" id="4_qeyqd"]
+[ext_resource type="PackedScene" uid="uid://bbeh2pg4xwut0" path="res://Scenes/battle_player.tscn" id="5_f6xt6"]
+[ext_resource type="PackedScene" uid="uid://cov8frrvqr5jr" path="res://Scenes/battle_player_bar.tscn" id="5_upb72"]
+[ext_resource type="PackedScene" uid="uid://b3pma7de3ckla" path="res://Scenes/enemy_button.tscn" id="6_ww2ai"]
+[ext_resource type="Theme" uid="uid://cee46fp1d8so6" path="res://Theme/buttonfont.tres" id="7_k7mbx"]
+[ext_resource type="PackedScene" uid="uid://bt7nhbmii1x83" path="res://Scenes/menu_cursor.tscn" id="12_rssjf"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_1ruyk"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_1otgo"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_pd5xk"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_f6xt6"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_ww2ai"]
+
+[sub_resource type="Theme" id="Theme_lrv64"]
+Button/font_sizes/font_size = 16
+Button/fonts/font = ExtResource("1_oxf17")
+Button/styles/disabled = SubResource("StyleBoxEmpty_1ruyk")
+Button/styles/focus = SubResource("StyleBoxEmpty_1otgo")
+Button/styles/hover = SubResource("StyleBoxEmpty_pd5xk")
+Button/styles/normal = SubResource("StyleBoxEmpty_f6xt6")
+Button/styles/pressed = SubResource("StyleBoxEmpty_ww2ai")
+Label/font_sizes/font_size = 8
+
+[sub_resource type="Theme" id="Theme_heh15"]
+
+[node name="Battle" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = SubResource("Theme_lrv64")
+script = ExtResource("2_ww2ai")
+
+[node name="ColorRect" type="ColorRect" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.238638, 0.135367, 0.415064, 1)
+
+[node name="TextureRect" parent="." instance=ExtResource("3_heh15")]
+layout_mode = 0
+anchors_preset = 0
+anchor_right = 0.0
+anchor_bottom = 0.0
+grow_horizontal = 1
+grow_vertical = 1
+
+[node name="Bottom" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -158.0
+offset_top = -58.0
+offset_right = -15.0
+offset_bottom = -3.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_constants/separation = 8
+
+[node name="Players" parent="Bottom" instance=ExtResource("3_ww2ai")]
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="Bottom/Players"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = -1.0
+offset_right = -6.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("4_k7mbx")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Bottom/Players/MarginContainer"]
+layout_mode = 2
+
+[node name="BattlePlayerBar" parent="Bottom/Players/MarginContainer/VBoxContainer" instance=ExtResource("5_upb72")]
+layout_mode = 2
+
+[node name="BattlePlayerBar2" parent="Bottom/Players/MarginContainer/VBoxContainer" instance=ExtResource("5_upb72")]
+layout_mode = 2
+
+[node name="BattlePlayerBar3" parent="Bottom/Players/MarginContainer/VBoxContainer" instance=ExtResource("5_upb72")]
+layout_mode = 2
+theme = SubResource("Theme_heh15")
+
+[node name="BattlePlayerBar4" parent="Bottom/Players/MarginContainer/VBoxContainer" instance=ExtResource("5_upb72")]
+layout_mode = 2
+
+[node name="Options" parent="." instance=ExtResource("2_f6xt6")]
+layout_mode = 2
+offset_left = 15.0
+offset_top = 122.0
+offset_right = 161.0
+offset_bottom = 177.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="Menu" type="VBoxContainer" parent="Options"]
+layout_mode = 0
+offset_left = 7.0
+offset_top = 4.0
+offset_right = 41.0
+offset_bottom = 53.0
+theme_override_constants/separation = 1
+script = ExtResource("4_qeyqd")
+
+[node name="Button" type="Button" parent="Options/Menu"]
+layout_mode = 2
+theme = ExtResource("7_k7mbx")
+text = "Attack"
+alignment = 0
+
+[node name="Button2" type="Button" parent="Options/Menu"]
+layout_mode = 2
+theme = ExtResource("7_k7mbx")
+text = "Skills"
+alignment = 0
+
+[node name="Button3" type="Button" parent="Options/Menu"]
+layout_mode = 2
+theme = ExtResource("7_k7mbx")
+text = "Items"
+alignment = 0
+
+[node name="Button4" type="Button" parent="Options/Menu"]
+layout_mode = 2
+theme = ExtResource("7_k7mbx")
+text = "Defend"
+alignment = 0
+
+[node name="Actions_Details" parent="Options" instance=ExtResource("4_lrv64")]
+layout_mode = 0
+offset_left = 51.0
+offset_top = 4.0
+offset_right = 141.0
+offset_bottom = 51.0
+
+[node name="Players" type="Control" parent="Options"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 5.0
+offset_top = -103.0
+offset_right = 15.0
+offset_bottom = -100.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="BattlePlayer1" parent="Options/Players" instance=ExtResource("5_f6xt6")]
+layout_mode = 0
+offset_left = 232.0
+offset_top = 19.0
+offset_right = 248.0
+offset_bottom = 35.0
+
+[node name="BattlePlayer2" parent="Options/Players" instance=ExtResource("5_f6xt6")]
+layout_mode = 0
+offset_left = 241.0
+offset_top = 41.0
+offset_right = 257.0
+offset_bottom = 57.0
+
+[node name="BattlePlayer3" parent="Options/Players" instance=ExtResource("5_f6xt6")]
+layout_mode = 0
+offset_left = 250.0
+offset_top = 63.0
+offset_right = 266.0
+offset_bottom = 79.0
+
+[node name="BattlePlayer4" parent="Options/Players" instance=ExtResource("5_f6xt6")]
+layout_mode = 0
+offset_left = 260.0
+offset_top = 83.0
+offset_right = 276.0
+offset_bottom = 99.0
+
+[node name="Enemies" type="Control" parent="Options"]
+clip_contents = true
+anchors_preset = 0
+offset_left = -5.0
+offset_top = -90.0
+offset_right = 133.0
+offset_bottom = 8.0
+
+[node name="BattleEnemy1" parent="Options/Enemies" instance=ExtResource("6_ww2ai")]
+layout_mode = 0
+offset_left = 32.0
+offset_top = 19.0
+offset_right = 57.0
+offset_bottom = 39.0
+
+[node name="BattleEnemy2" parent="Options/Enemies" instance=ExtResource("6_ww2ai")]
+layout_mode = 0
+offset_left = 82.0
+offset_top = 19.0
+offset_right = 107.0
+offset_bottom = 39.0
+
+[node name="BattleEnemy3" parent="Options/Enemies" instance=ExtResource("6_ww2ai")]
+layout_mode = 0
+offset_left = 13.0
+offset_top = 58.0
+offset_right = 38.0
+offset_bottom = 78.0
+
+[node name="BattleEnemy4" parent="Options/Enemies" instance=ExtResource("6_ww2ai")]
+layout_mode = 0
+offset_left = 64.0
+offset_top = 56.0
+offset_right = 89.0
+offset_bottom = 76.0
+
+[node name="MenuCursor" parent="." instance=ExtResource("12_rssjf")]
+layout_mode = 1
+offset_left = 6.0
+offset_top = 126.0
+offset_right = -297.0
+offset_bottom = -38.0
+
+[connection signal="button_focused" from="Options/Menu" to="." method="_on_menu_button_focused"]
+[connection signal="button_pressed" from="Options/Menu" to="." method="_on_menu_button_pressed"]

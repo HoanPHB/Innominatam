@@ -1,0 +1,28 @@
+[gd_scene load_steps=4 format=3 uid="uid://bju1ij6r86ig0"]
+
+[ext_resource type="Texture2D" uid="uid://dvkjje1tflivo" path="res://Assets/ruins.png" id="1_08y17"]
+[ext_resource type="Texture2D" uid="uid://nodj6oexn1nb" path="res://Assets/sky.png" id="2_x103o"]
+[ext_resource type="Texture2D" uid="uid://dij4jw4hja12c" path="res://Assets/ruins2.png" id="3_207f5"]
+
+[node name="TextureRect" type="TextureRect"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Ruins" type="Sprite2D" parent="."]
+visible = false
+position = Vector2(159.625, 55.5)
+scale = Vector2(0.166016, 0.232407)
+texture = ExtResource("1_08y17")
+
+[node name="Sky" type="Sprite2D" parent="."]
+position = Vector2(159.75, 89.75)
+scale = Vector2(0.165885, 0.165278)
+texture = ExtResource("2_x103o")
+
+[node name="Ruins2" type="Sprite2D" parent="."]
+position = Vector2(159.875, 40.75)
+scale = Vector2(0.166797, 0.256944)
+texture = ExtResource("3_207f5")

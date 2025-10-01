@@ -1,0 +1,1 @@
+class_name Char_Actions extends NinePatchRect

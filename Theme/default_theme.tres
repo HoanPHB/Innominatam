@@ -1,0 +1,24 @@
+[gd_resource type="Theme" load_steps=4 format=3 uid="uid://bqtisso1c0ux6"]
+
+[ext_resource type="FontFile" uid="uid://doa3i0gr51nh1" path="res://fonts/Silkscreen-Regular.ttf" id="1_t8nia"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kvqyf"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_u1xyr"]
+bg_color = Color(0.992586, 0.963612, 0.94221, 1)
+
+[resource]
+HBoxContainer/constants/separation = 4
+Label/font_sizes/font_size = 8
+MarginContainer/constants/margin_bottom = 2
+MarginContainer/constants/margin_left = 2
+MarginContainer/constants/margin_right = 1
+MarginContainer/constants/margin_top = 2
+ProgressBar/colors/font_color = Color(0.95, 0.95, 0.95, 1)
+ProgressBar/colors/font_outline_color = Color(0, 0, 0, 1)
+ProgressBar/constants/outline_size = 0
+ProgressBar/font_sizes/font_size = 8
+ProgressBar/fonts/font = ExtResource("1_t8nia")
+ProgressBar/styles/background = SubResource("StyleBoxFlat_kvqyf")
+ProgressBar/styles/fill = SubResource("StyleBoxFlat_u1xyr")
+VBoxContainer/constants/separation = 2

@@ -1,0 +1,14 @@
+[gd_scene load_steps=3 format=3 uid="uid://o5kqdnlu4h5l"]
+
+[ext_resource type="Texture2D" uid="uid://cxg6wnwgw413h" path="res://Assets/Ninepatch8x8.png" id="1_seiay"]
+[ext_resource type="Script" uid="uid://c18ewcbxx8x20" path="res://Scenes/char_actions.gd" id="2_seiay"]
+
+[node name="Char_Actions" type="NinePatchRect"]
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 2.0
+texture = ExtResource("1_seiay")
+patch_margin_left = 4
+patch_margin_top = 4
+patch_margin_right = 4
+patch_margin_bottom = 4
+script = ExtResource("2_seiay")

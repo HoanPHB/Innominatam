@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3 uid="uid://bbeh2pg4xwut0"]
+
+[ext_resource type="Texture2D" uid="uid://dd7vatcmjrw46" path="res://Assets/white-circle.png" id="1_xl3td"]
+
+[node name="BattlePlayer1" type="TextureButton"]
+self_modulate = Color(0, 1, 0, 1)
+offset_left = 235.0
+offset_top = 27.0
+offset_right = 251.0
+offset_bottom = 43.0
+texture_normal = ExtResource("1_xl3td")
