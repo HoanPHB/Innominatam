@@ -16,7 +16,7 @@ func set_actor(a: BattleActor) -> void:
 	if _name_label:
 		_name_label.text = _shorten(actor.name, 6)
 	if _hp_label:
-		_hp_label.text = "%d/%d" % [actor.hp, actor.hp_max]
+		_hp_label.text = "%d" % actor.hp
 	if actor and not actor.hp_changed.is_connected(_on_actor_hp_changed):
 		actor.hp_changed.connect(_on_actor_hp_changed)
 
@@ -27,7 +27,7 @@ func _shorten(text: String, max_len: int) -> String:
 
 func _on_actor_hp_changed(hp: int, change: int) -> void:
 	if _hp_label:
-		_hp_label.text = "%d/%d" % [hp, actor.hp_max]
+		_hp_label.text = "%d" % hp
 
 func highlight(on: bool) -> void:
 	var anim: String = "Highlight" if on else "RESET"

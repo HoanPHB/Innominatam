@@ -45,7 +45,7 @@ _data = {
 custom_minimum_size = Vector2(140, 0)
 offset_right = 196.0
 offset_bottom = 25.0
-theme_override_constants/separation = 1
+theme_override_constants/separation = 4
 script = ExtResource("1_cgp6c")
 
 [node name="Name" type="Label" parent="."]
@@ -57,21 +57,21 @@ clip_text = true
 text_overrun_behavior = 3
 
 [node name="Health" type="Label" parent="."]
-custom_minimum_size = Vector2(40, 0)
+custom_minimum_size = Vector2(28, 0)
 layout_mode = 2
 size_flags_horizontal = 0
 text = "9999"
-horizontal_alignment = 2
+horizontal_alignment = 1
 
 [node name="Mana" type="Label" parent="."]
 custom_minimum_size = Vector2(16, 0)
 layout_mode = 2
 size_flags_horizontal = 0
 text = "999"
-horizontal_alignment = 2
+horizontal_alignment = 1
 
 [node name="ATB" parent="." instance=ExtResource("2_wklpr")]
-custom_minimum_size = Vector2(28, 5)
+custom_minimum_size = Vector2(35, 5)
 layout_mode = 2
 size_flags_horizontal = 0
 

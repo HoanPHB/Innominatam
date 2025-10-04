@@ -14,13 +14,12 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	value += SPEED_BASE
 	
-	if is_equal_approx(value, max_value):
+	if value >= max_value:
+		value = max_value # Clamp
 		if _anim:
 			_anim.play("highlight")
-		set_process(false)
-		
-		if socket:
-			socket.enable()
+		set_process(false) # Stop processing this bar
+		# socket.enable() is now handled by battle.gd
 
 func reset() -> void:
 	if _anim:
