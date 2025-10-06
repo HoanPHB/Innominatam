@@ -10,10 +10,10 @@ func _ready() -> void:
 	if _anim:
 		_anim.play("RESET")
 	value = randf_range(min_value, max_value * 0.75)
-	
+
 func _process(_delta: float) -> void:
 	value += SPEED_BASE
-	
+
 	if value >= max_value:
 		value = max_value # Clamp
 		if _anim:

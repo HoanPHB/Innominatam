@@ -1,4 +1,4 @@
-[gd_scene load_steps=21 format=3 uid="uid://cncxrpb7yg1i4"]
+[gd_scene load_steps=22 format=3 uid="uid://cncxrpb7yg1i4"]
 
 [ext_resource type="FontFile" uid="uid://vc186hdx1nna" path="res://fonts/PixelSerif_16px_v02.ttf" id="1_oxf17"]
 [ext_resource type="PackedScene" uid="uid://o5kqdnlu4h5l" path="res://Scenes/char_actions.tscn" id="2_f6xt6"]
@@ -13,6 +13,7 @@
 [ext_resource type="PackedScene" uid="uid://b3pma7de3ckla" path="res://Scenes/enemy_button.tscn" id="6_ww2ai"]
 [ext_resource type="Theme" uid="uid://cee46fp1d8so6" path="res://Theme/buttonfont.tres" id="7_k7mbx"]
 [ext_resource type="PackedScene" uid="uid://bt7nhbmii1x83" path="res://Scenes/menu_cursor.tscn" id="12_rssjf"]
+[ext_resource type="PackedScene" uid="uid://r6rc0vdpvoum" path="res://Scenes/player_cursor.tscn" id="14_xkp4y"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_1ruyk"]
 
@@ -157,6 +158,7 @@ text = "Defend"
 alignment = 0
 
 [node name="Actions_Details" parent="Options" instance=ExtResource("4_lrv64")]
+visible = false
 layout_mode = 0
 offset_left = 51.0
 offset_top = 4.0
@@ -165,43 +167,39 @@ offset_bottom = 51.0
 
 [node name="Players" type="Control" parent="Options"]
 layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 5.0
-offset_top = -103.0
-offset_right = 15.0
-offset_bottom = -100.0
-grow_horizontal = 2
-grow_vertical = 2
+anchors_preset = 0
+offset_left = 159.0
+offset_top = -90.0
+offset_right = 315.0
+offset_bottom = -1.0
 
 [node name="BattlePlayer1" parent="Options/Players" instance=ExtResource("5_f6xt6")]
 layout_mode = 0
-offset_left = 232.0
-offset_top = 19.0
-offset_right = 248.0
-offset_bottom = 35.0
+offset_left = 79.0
+offset_top = 3.0
+offset_right = 95.0
+offset_bottom = 19.0
 
 [node name="BattlePlayer2" parent="Options/Players" instance=ExtResource("5_f6xt6")]
 layout_mode = 0
-offset_left = 241.0
-offset_top = 41.0
-offset_right = 257.0
-offset_bottom = 57.0
+offset_left = 88.0
+offset_top = 25.0
+offset_right = 104.0
+offset_bottom = 41.0
 
 [node name="BattlePlayer3" parent="Options/Players" instance=ExtResource("5_f6xt6")]
 layout_mode = 0
-offset_left = 250.0
-offset_top = 63.0
-offset_right = 266.0
-offset_bottom = 79.0
+offset_left = 97.0
+offset_top = 47.0
+offset_right = 113.0
+offset_bottom = 63.0
 
 [node name="BattlePlayer4" parent="Options/Players" instance=ExtResource("5_f6xt6")]
 layout_mode = 0
-offset_left = 260.0
-offset_top = 83.0
-offset_right = 276.0
-offset_bottom = 99.0
+offset_left = 107.0
+offset_top = 67.0
+offset_right = 123.0
+offset_bottom = 83.0
 
 [node name="Enemies" type="Control" parent="Options"]
 clip_contents = true
@@ -245,6 +243,18 @@ offset_left = 6.0
 offset_top = 126.0
 offset_right = -297.0
 offset_bottom = -38.0
+
+[node name="PlayerCursor" parent="." instance=ExtResource("14_xkp4y")]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 253.0
+offset_top = 20.0
+offset_right = -50.0
+offset_bottom = -144.0
+grow_horizontal = 2
+grow_vertical = 2
 
 [connection signal="button_focused" from="Options/Menu" to="." method="_on_menu_button_focused"]
 [connection signal="button_pressed" from="Options/Menu" to="." method="_on_menu_button_pressed"]

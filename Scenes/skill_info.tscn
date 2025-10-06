@@ -1,15 +1,21 @@
 [gd_scene load_steps=2 format=3 uid="uid://vh2oh4tr0pno"]
 
-[ext_resource type="Texture2D" uid="uid://budl0xpkiwmnt" path="res://Assets/Ninepatch16x16.png" id="1_cyy01"]
+[ext_resource type="Texture2D" uid="uid://budl0xpkiwmnt" path="res://Assets/Ninepatch16x16.png" id="1_ninepatch_texture"]
 
-[node name="Skill_info" type="NinePatchRect"]
-offset_left = 46.0
-offset_top = 128.0
-offset_right = 204.0
-offset_bottom = 175.0
-size_flags_horizontal = 3
-texture = ExtResource("1_cyy01")
+[node name="SkillInfo" type="NinePatchRect"]
+offset_right = 40.0
+offset_bottom = 40.0
+texture = ExtResource("1_ninepatch_texture")
+region_rect = Rect2(0, 0, 16, 16)
 patch_margin_left = 4
 patch_margin_top = 4
 patch_margin_right = 4
 patch_margin_bottom = 4
+
+[node name="SkillList" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2

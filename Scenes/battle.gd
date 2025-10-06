@@ -6,6 +6,9 @@ var fct_travel = Vector2(0, -40)
 var fct_duration = 1.2
 var fct_spread = 0
 
+var victory_screen_scene = preload("res://Scenes/victory_screen.tscn")
+var defeat_screen_scene = preload("res://Scenes/defeat_screen.tscn")
+
 var event_queue: Array = []
 var current_active_socket: TurnitySocket
 var is_turn_active: bool = false
@@ -16,12 +19,20 @@ var ready_sockets: Array[TurnitySocket] = [] # New: Managed by battle.gd
 @onready var _options_menu: Menu = $Options/Menu
 @onready var _enemies_root: Control = $Options/Enemies
 @onready var _menu_cursor: Node = $MenuCursor
+@onready var _player_cursor: TextureRect = $PlayerCursor
 @onready var _players_menu: Menu = $Players
 @onready var _players_infos: Array = $Bottom/Players/MarginContainer/VBoxContainer.get_children()
 @onready var _player_sprites: Array = $Options/Players.get_children()
+@onready var _victory_screen: Control = $VictoryScreen
+@onready var _defeat_screen: Control = $DefeatScreen
+@onready var _actions_details: Control = $Options/Actions_Details
 
 var selecting_enemies: bool = false
 var enemy_index: int = 0
+
+var selecting_ally: bool = false
+var player_index: int = 0
+var current_skill_id: String = ""
 
 # Simple party setup for this scene
 var party_members: Array = [] # Array[BattleActor]
@@ -32,7 +43,7 @@ func _ready() -> void:
 	for b in _options_menu.get_buttons():
 		if b is BaseButton:
 			b.disabled = true
-	
+
 	# Clear any initial focus and hide menu cursor
 	var focus_owner := get_viewport().gui_get_focus_owner()
 	if focus_owner:
@@ -46,13 +57,21 @@ func _ready() -> void:
 	_init_party_members()
 	_assign_party_to_bars()
 	_init_enemies()
-	
+
+	_victory_screen = victory_screen_scene.instantiate()
+	add_child(_victory_screen)
+	_victory_screen.hide()
+
+	_defeat_screen = defeat_screen_scene.instantiate()
+	add_child(_defeat_screen)
+	_defeat_screen.hide()
+
 	# Collect all ATB bars for pausing
 	for p_bar in _players_infos:
 		atb_nodes.append(p_bar.get_node("ATB"))
 	for e_btn in _get_enemies():
 		atb_nodes.append(e_btn.get_node("ATB"))
-	
+
 	# --- Turnity Setup ---
 	# TurnityManager.activated_turn.connect(_on_turnity_activated_turn) # No longer needed
 	TurnityManager.start(self) # Collect all sockets in the scene
@@ -66,31 +85,36 @@ func _process(_delta: float) -> void:
 		return
 
 	# Step 1: Check all ATB bars and enable their sockets if they are truly full.
+	var any_full = false
 	for atb_bar in atb_nodes:
 		if atb_bar.value >= atb_bar.max_value:
 			atb_bar.value = atb_bar.max_value # Clamp
 			atb_bar.set_process(false) # Stop processing this bar
-			
+			any_full = true
+
 			if atb_bar.socket and atb_bar.socket.is_disabled(): # Only enable if not already enabled
 				atb_bar.socket.enable()
 				# Play the highlight animation from here
 				if atb_bar._anim:
 					atb_bar._anim.play("highlight")
-				
+
 				# Add to our custom ready queue
 				ready_sockets.append(atb_bar.socket)
 
+	if any_full:
+		_pause_all_atb() # Pause all bars if any reached max
+
 	# Step 2: Find the first *truly* ready socket from our queue and start its turn.
-	if not ready_sockets.is_empty():
+	if not is_turn_active and not ready_sockets.is_empty():
 		# Sort by some criteria if needed (e.g., speed, or just take first)
 		# For now, just take the first one that became ready
 		var socket = ready_sockets.pop_front()
-
+		socket.disable()
 		# ULTIMATE FAILSAFE: Double-check the ATB bar's value one last time.
 		var atb_bar = socket.actor.get_node_or_null("ATB")
 		if atb_bar and atb_bar.value < atb_bar.max_value - 0.001:
 			# This socket is enabled but its bar is NOT full. This is an invalid state.
-			socket.disable() # Force it back to disabled
+			socket.enable() # Force it back to disabled
 			if atb_bar._anim:
 				atb_bar._anim.play("RESET") # Reset its highlight
 			# Do NOT start turn, just return and wait for next _process
@@ -98,19 +122,31 @@ func _process(_delta: float) -> void:
 
 		# If we get here, the character is *truly* ready.
 		# Immediately disable them to prevent race conditions (already done by pop_front and disable above).
-		
+
 		is_turn_active = true
 		_pause_all_atb()
-		_on_turnity_activated_turn(socket) # Call the turn activation logic directly
+		_on_turnity_activated_turn(socket)
 		return
 func _pause_all_atb() -> void:
 	for atb in atb_nodes:
 		atb.set_process(false)
+		atb.value = min(atb.value, atb.max_value)
 
 func _resume_all_atb() -> void:
 	for atb in atb_nodes:
 		if atb.value < atb.max_value:
 			atb.set_process(true)
+		else:
+			# Already full, ensure it's in the ready queue
+			if atb.socket and not atb.socket.is_disabled() and not ready_sockets.has(atb.socket):
+				ready_sockets.append(atb.socket)
+
+	# Immediately start the next turn if possible
+	if not is_turn_active and not ready_sockets.is_empty():
+		var socket = ready_sockets.pop_front()
+		_pause_all_atb()
+		is_turn_active = true
+		_on_turnity_activated_turn(socket)
 
 func _reset_all_highlights() -> void:
 	for p_bar in _players_infos:
@@ -166,6 +202,11 @@ func _on_turnity_activated_turn(socket: TurnitySocket) -> void:
 
 	current_active_socket = socket
 
+	# Reset is_defending at the start of the turn
+	var actor = socket.actor.data if socket.actor is TextureButton else socket.actor.actor
+	if actor:
+		actor.is_defending = false
+
 	if socket.actor is BattlePlayerbar:
 		var player_bar: BattlePlayerbar = socket.actor
 		player_bar.highlight(true)
@@ -173,9 +214,12 @@ func _on_turnity_activated_turn(socket: TurnitySocket) -> void:
 		var atb_anim = player_bar.get_node("ATB").get_node("AnimationPlayer")
 		atb_anim.play("highlight")
 
+		# Set the player cursor to the active character
+		var player_node = _get_feedback_node(player_bar)
+		_player_cursor.set_character(player_node)
+
 		# Enable player controls
-		_options_menu.set_enabled(true)
-		for b in _options_menu.get_buttons():
+		for b in _options_menu.get_children():
 			if b is BaseButton:
 				b.disabled = false
 		if _menu_cursor:
@@ -184,8 +228,24 @@ func _on_turnity_activated_turn(socket: TurnitySocket) -> void:
 			elif _menu_cursor.has_method("show"):
 				_menu_cursor.show()
 		_options.show()
-		_options_menu.button_focus(0)
+		_options_menu.show() # Ensure the menu is visible
 
+		# Disable Skills button if character has no skills
+		var skills_button = null
+		for b in _options_menu.get_children():
+			if b is BaseButton and b.text == "Skills":
+				skills_button = b
+				break
+		if skills_button:
+			var skill_actor = current_active_socket.actor.data if current_active_socket.actor is TextureButton else current_active_socket.actor.actor
+			if skill_actor and skill_actor.known_skills.is_empty():
+				skills_button.disabled = true
+
+		# Grab focus on the first enabled button
+		for b in _options_menu.get_children():
+			if b is BaseButton and not b.disabled:
+				b.grab_focus()
+				break
 	elif socket.actor is TextureButton: # Assuming enemies are TextureButtons
 		# Basic Enemy AI: Attack a random player and end turn
 		var enemy_button: TextureButton = socket.actor
@@ -196,10 +256,10 @@ func _on_turnity_activated_turn(socket: TurnitySocket) -> void:
 		_process_next_event()
 
 		# End the enemy's turn
-		# socket is already disabled by the _process loop
 		var atb = enemy_button.get_node_or_null("ATB")
 		if atb:
 			atb.reset()
+		socket.disable()
 
 		is_turn_active = false
 		_resume_all_atb()
@@ -207,6 +267,12 @@ func _on_turnity_activated_turn(socket: TurnitySocket) -> void:
 func _on_menu_button_pressed(button: BaseButton) -> void:
 	if button.text == "Attack":
 		_begin_enemy_selection()
+	elif button.text == "Skills":
+		_show_skill_menu()
+	elif button.text == "Defend":
+		var defending_actor = current_active_socket.actor.data if current_active_socket.actor is TextureButton else current_active_socket.actor.actor
+		defending_actor.is_defending = true
+		_consume_player_turn(current_active_socket)
 	else:
 		print(button.text)
 
@@ -225,14 +291,27 @@ func _begin_enemy_selection() -> void:
 		_options_menu.set_enabled(true)
 		return
 	selecting_enemies = true
-	_options_menu.set_enabled(false)
+	for b in _options_menu.get_children():
+		b.disabled = true
+	# Enable focus for selectable enemies
+	for enemy in enemies:
+		if not enemy.disabled:
+			enemy.focus_mode = Control.FOCUS_ALL
 	enemy_index = start_index
 	enemies[enemy_index].grab_focus()
 
 func _end_enemy_selection(confirmed: bool) -> void:
 	selecting_enemies = false
-	_options_menu.set_enabled(true)
-	_options_menu.button_focus(_options_menu.index)
+	for b in _options_menu.get_children():
+		if b is BaseButton:
+			b.disabled = false
+
+	# Restore focus to the first enabled menu button (safe and predictable).
+	for b in _options_menu.get_children():
+		if b is BaseButton and not b.disabled:
+			b.grab_focus()
+			break
+
 
 	if confirmed:
 		var enemies := _get_enemies()
@@ -247,38 +326,60 @@ func _end_enemy_selection(confirmed: bool) -> void:
 			_consume_player_turn(current_active_socket)
 
 func _input(event: InputEvent) -> void:
-	# Intercept keys BEFORE GUI so TextureButtons/Menu don't also react
-	if not selecting_enemies:
-		return
-	if event is InputEventKey and event.pressed and not event.echo:
-		var enemies := _get_enemies()
-		if enemies.size() == 0:
-			return
+	# --- Ally Selection Input ---
+	if selecting_ally and event is InputEventKey and event.pressed and not event.echo:
 		match event.keycode:
-			KEY_RIGHT, KEY_DOWN:
-				var attempts := 0
-				while attempts < enemies.size():
-					enemy_index = (enemy_index + 1) % enemies.size()
-					if _is_enemy_selectable(enemies[enemy_index]):
-						enemies[enemy_index].grab_focus()
-						accept_event()
-						break
-					attempts += 1
-			KEY_LEFT, KEY_UP:
-				var attempts := 0
-				while attempts < enemies.size():
-					enemy_index = (enemy_index - 1 + enemies.size()) % enemies.size()
-					if _is_enemy_selectable(enemies[enemy_index]):
-						enemies[enemy_index].grab_focus()
-						accept_event()
-						break
-					attempts += 1
+			KEY_DOWN, KEY_RIGHT:
+				player_index = (player_index + 1) % _player_sprites.size()
+				_player_sprites[player_index].grab_focus()
+				accept_event()
+			KEY_UP, KEY_LEFT:
+				player_index = (player_index - 1 + _player_sprites.size()) % _player_sprites.size()
+				_player_sprites[player_index].grab_focus()
+				accept_event()
 			KEY_ENTER, KEY_KP_ENTER, KEY_SPACE:
-				_end_enemy_selection(true)
+				_end_ally_selection(true)
 				accept_event()
 			KEY_ESCAPE, KEY_BACKSPACE:
-				_end_enemy_selection(false)
+				_end_ally_selection(false)
 				accept_event()
+		return # Stop further input processing
+
+# Intercept keys BEFORE GUI so TextureButtons/Menu don't also react WHEN we're in enemy selection.
+	if selecting_enemies:
+		if event is InputEventKey and event.pressed and not event.echo:
+			var enemies := _get_enemies()
+			if enemies.size() == 0:
+				return
+			match event.keycode:
+				KEY_RIGHT, KEY_DOWN:
+					var attempts := 0
+					while attempts < enemies.size():
+						enemy_index = (enemy_index + 1) % enemies.size()
+						if _is_enemy_selectable(enemies[enemy_index]):
+							enemies[enemy_index].grab_focus()
+							accept_event()
+							break
+						attempts += 1
+				KEY_LEFT, KEY_UP:
+					var attempts := 0
+					while attempts < enemies.size():
+						enemy_index = (enemy_index - 1 + enemies.size()) % enemies.size()
+						if _is_enemy_selectable(enemies[enemy_index]):
+							enemies[enemy_index].grab_focus()
+							accept_event()
+							break
+						attempts += 1
+				KEY_ENTER, KEY_KP_ENTER, KEY_SPACE:
+					_end_enemy_selection(true)
+					accept_event()
+				KEY_ESCAPE, KEY_BACKSPACE:
+					_end_enemy_selection(false)
+					accept_event()
+	# Make sure we return so GUI doesn't also handle these keys while selecting enemies
+	return
+# Otherwise, not selecting_enemies -> let the normal GUI system handle inputs
+
 
 func _consume_player_turn(socket: TurnitySocket) -> void:
 	if not socket:
@@ -296,8 +397,7 @@ func _consume_player_turn(socket: TurnitySocket) -> void:
 		atb.reset()
 
 	# Disable menu input and hide the menu cursor
-	_options_menu.set_enabled(false)
-	for b in _options_menu.get_buttons():
+	for b in _options_menu.get_children():
 		if b is BaseButton:
 			b.disabled = true
 	var focus_owner := get_viewport().gui_get_focus_owner()
@@ -308,6 +408,9 @@ func _consume_player_turn(socket: TurnitySocket) -> void:
 			_menu_cursor.set_active(false)
 		elif _menu_cursor.has_method("hide"):
 			_menu_cursor.hide()
+
+	# Hide the player cursor
+	_player_cursor.set_character(null)
 
 	is_turn_active = false
 	_resume_all_atb()
@@ -345,6 +448,9 @@ func _init_party_members() -> void:
 		a.name = n
 		a.hp_max = 100
 		a.hp = a.hp_max
+		# Assign skills on a per-character basis.
+		if n == "Prysha":
+			a.known_skills = ["heal"]
 		party_members.append(a)
 
 # Assign created actors to UI bars
@@ -405,7 +511,7 @@ func _process_next_event() -> void:
 			var target_actor: BattleActor = evt.get("target", null)
 			var target_info_node: Node = evt.get("target_node", null)
 			if target_actor and target_info_node:
-				var hp_change = target_actor.healhurt(-int(evt.get("power", 10)))
+				var hp_change = target_actor.take_damage(int(evt.get("power", 10)))
 
 				# Get the node to apply feedback to (the sprite on the battlefield)
 				var feedback_node = _get_feedback_node(target_info_node)
@@ -429,5 +535,192 @@ func _process_next_event() -> void:
 					var socket: TurnitySocket = btn.get_node_or_null("TurnitySocket")
 					if socket:
 						socket.disable()
-		_:
+		"skill":
+			var skill_data: Dictionary = evt.get("skill_data")
+			var target_actor: BattleActor = evt.get("target", null)
+			var target_info_node: Node = evt.get("target_node", null)
+
+			if skill_data.type == "healing":
+				var hp_change = target_actor.healhurt(skill_data.power)
+				var feedback_node = _get_feedback_node(target_info_node)
+				_show_combat_text(feedback_node, hp_change)
+	_check_battle_over()
+
+func _check_battle_over() -> void:
+	var all_enemies_defeated = true
+	for enemy_btn in _get_enemies():
+		var enemy_actor = enemy_btn.data as BattleActor
+		if enemy_actor and enemy_actor.hp > 0:
+			all_enemies_defeated = false
+			break
+	if all_enemies_defeated:
+		get_tree().paused = true
+		_victory_screen.show()
+
+	var all_players_defeated = true
+	for member in party_members:
+		if member.hp > 0:
+			all_players_defeated = false
+			break
+	if all_players_defeated:
+		get_tree().paused = true
+		_defeat_screen.show()
+
+
+func _begin_ally_selection() -> void:
+	selecting_ally = true
+	player_index = 0
+	# Make player sprites focusable
+	for p in _player_sprites:
+		p.focus_mode = Control.FOCUS_ALL
+	_player_sprites[player_index].grab_focus()
+
+
+func _end_ally_selection(confirmed: bool) -> void:
+	selecting_ally = false
+	# Make player sprites non-focusable again
+	for p in _player_sprites:
+		p.focus_mode = Control.FOCUS_NONE
+
+	if confirmed:
+		var target_player_sprite = _player_sprites[player_index]
+		# Find the corresponding BattlePlayerbar for the selected sprite
+		var target_player_bar = _players_infos[player_index]
+
+		var attacker_actor = current_active_socket.actor.data if current_active_socket.actor is TextureButton else current_active_socket.actor.actor
+		var target_actor = target_player_bar.actor
+
+		_create_skill_event(current_skill_id, attacker_actor, target_actor, target_player_bar)
+		_process_next_event()
+		_consume_player_turn(current_active_socket)
+		_end_skill_selection()
+	else:
+		_end_skill_selection()
+
+func _end_skill_selection() -> void:
+	_actions_details.hide()
+	for child in _actions_details.get_node("SkillList").get_children():
+		child.queue_free()
+
+	# Re-enable enemy focus, but keep defeated enemies unfocusable
+	for enemy in _get_enemies():
+		if not enemy.disabled:
+			enemy.focus_mode = Control.FOCUS_ALL
+
+	# Re-enable menu button focus
+	for btn in _options_menu.get_children():
+		if btn is BaseButton:
+			btn.focus_mode = Control.FOCUS_ALL
+
+	_options_menu.show()
+	if _menu_cursor.has_method("set_active"):
+		_menu_cursor.set_active(true)
+	for btn in _options_menu.get_children():
+		if btn is Button and btn.text == "Skills":
+			btn.grab_focus()
+			break
+
+func _create_skill_event(skill_id: String, attacker: BattleActor, target: BattleActor, target_node: Node) -> void:
+	var skill_data = Skills.data.get(skill_id)
+	if not skill_data:
+		return
+
+	var evt = {
+		"type": "skill",
+		"skill_data": skill_data,
+		"attacker": attacker,
+		"target": target,
+		"target_node": target_node
+	}
+	event_queue.append(evt)
+
+
+func _show_skill_menu() -> void:
+	var current_actor: BattleActor = current_active_socket.actor.data if current_active_socket.actor is TextureButton else current_active_socket.actor.actor
+	if not current_actor:
+		return
+
+	# Hide main menu, show details panel, and activate the cursor for the sub-menu
+	_options_menu.hide()
+	_actions_details.show()
+	if _menu_cursor.has_method("set_active"):
+		_menu_cursor.set_active(true)
+
+	# Disable enemy focus to prevent leakage during skill selection
+	for enemy in _get_enemies():
+		enemy.focus_mode = Control.FOCUS_NONE
+
+	# Disable menu button focus to prevent leakage
+	for btn in _options_menu.get_children():
+		if btn is BaseButton:
+			btn.focus_mode = Control.FOCUS_NONE
+
+	# Disable player sprite focus to prevent leakage
+	for player_sprite in _player_sprites:
+		player_sprite.focus_mode = Control.FOCUS_NONE
+
+	# Clear any previous buttons from the details panel
+	for child in _actions_details.get_node("SkillList").get_children():
+		child.queue_free()
+
+	if current_actor.known_skills.is_empty():
+		_actions_details.hide()
+		_options_menu.show()
+		# Re-enable menu button focus and enable buttons
+		for btn in _options_menu.get_children():
+			if btn is BaseButton:
+				btn.focus_mode = Control.FOCUS_ALL
+				btn.disabled = false
+		_options_menu.get_child(0).grab_focus() # Focus the first button in the main menu
+		if _menu_cursor.has_method("set_active"):
+			_menu_cursor.set_active(true)
+		return
+	var skill_buttons: Array[Button] = []
+	# Create and add a button for each known skill
+	for skill_id in current_actor.known_skills:
+		var skill_data = Skills.data.get(skill_id)
+		if not skill_data:
+			continue
+
+		var skill_button = Button.new()
+		skill_button.text = skill_data.name
+		skill_button.pressed.connect(func(): _on_skill_selected(skill_id))
+		_actions_details.get_node("SkillList").add_child(skill_button)
+		skill_buttons.append(skill_button)
+
+	# Set up focus navigation for the new buttons
+	if not skill_buttons.is_empty():
+		if skill_buttons.size() > 1:
+			for i in range(skill_buttons.size()):
+				var current_button = skill_buttons[i]
+				var prev_button = skill_buttons[i - 1] if i > 0 else skill_buttons.back()
+				var next_button = skill_buttons[i + 1] if i < skill_buttons.size() - 1 else skill_buttons.front()
+
+				current_button.focus_neighbor_top = prev_button.get_path()
+				current_button.focus_neighbor_bottom = next_button.get_path()
+				# Explicitly prevent horizontal focus escape
+				current_button.focus_neighbor_left = NodePath()
+				current_button.focus_neighbor_right = NodePath()
+
+		# Grab focus for the first button in the list
+		skill_buttons[0].grab_focus()
+
+
+func _on_skill_selected(skill_id: String):
+	var skill_data = Skills.data.get(skill_id)
+	if not skill_data:
+		return
+
+	# Store the skill being used
+	current_skill_id = skill_id
+
+	# Begin target selection based on skill type
+	match skill_data.target:
+		"ally":
+			_begin_ally_selection()
+		"enemy":
+			# TODO: Implement enemy selection for skills
+			pass
+		"self":
+			# TODO: Implement self-targeting skills
 			pass
