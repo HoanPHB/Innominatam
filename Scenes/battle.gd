@@ -553,18 +553,28 @@ func _check_battle_over() -> void:
 		if enemy_actor and enemy_actor.hp > 0:
 			all_enemies_defeated = false
 			break
+
 	if all_enemies_defeated:
 		get_tree().paused = true
 		_victory_screen.show()
+		await get_tree().create_timer(2.0, true).timeout
+		get_tree().paused = false
+		get_tree().change_scene_to_file("res://Scenes/playground.tscn")
+		return
 
 	var all_players_defeated = true
 	for member in party_members:
 		if member.hp > 0:
 			all_players_defeated = false
 			break
+
 	if all_players_defeated:
 		get_tree().paused = true
 		_defeat_screen.show()
+		await get_tree().create_timer(2.0, true).timeout
+		get_tree().paused = false
+		get_tree().change_scene_to_file("res://Scenes/playground.tscn")
+
 
 
 func _begin_ally_selection() -> void:

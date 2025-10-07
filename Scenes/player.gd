@@ -10,6 +10,7 @@ var direction : Vector2 = Vector2.ZERO
 
 func _ready():
 	state_machine.Initialize(self)
+	add_to_group("player")
 	pass
 
 func _process(delta):
@@ -53,3 +54,4 @@ func AnimDirection() -> String:
 		return "up"
 	else:
 		return "side"
+		

@@ -3,7 +3,7 @@ class_name BattleActor extends Resource
 signal hp_changed(hp, change)
 
 var name: String = "ORC"
-var hp_max: int = 1
+var hp_max: int = 20
 var hp: int = hp_max
 
 # An array of strings that correspond to the keys in the Skills.gd database.

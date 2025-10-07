@@ -137,7 +137,6 @@ _data = {
 }
 
 [node name="Player" type="CharacterBody2D"]
-scale = Vector2(0.5, 0.5)
 collision_mask = 16
 motion_mode = 1
 wall_min_slide_angle = 0.174533
@@ -166,3 +165,4 @@ script = ExtResource("4_fkybt")
 script = ExtResource("5_fkybt")
 
 [node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(0, -19)

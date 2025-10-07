@@ -244,3 +244,4 @@ func on_finished():
 	turn_duration = 0
 	max_turns = 0
 	sort_rule = func(a: TurnitySocket, b: TurnitySocket): return a.id > b.id
+	
