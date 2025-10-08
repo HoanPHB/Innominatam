@@ -84,7 +84,10 @@ func _process(_delta: float) -> void:
 	if is_turn_active:
 		return
 
-	# Step 1: Check all ATB bars and enable their sockets if they are truly full.
+	_check_for_ready_actors()
+	_start_next_turn()
+
+func _check_for_ready_actors() -> void:
 	var any_full = false
 	for atb_bar in atb_nodes:
 		if atb_bar.value >= atb_bar.max_value:
@@ -99,12 +102,13 @@ func _process(_delta: float) -> void:
 					atb_bar._anim.play("highlight")
 
 				# Add to our custom ready queue
-				ready_sockets.append(atb_bar.socket)
+				if not ready_sockets.has(atb_bar.socket):
+					ready_sockets.append(atb_bar.socket)
 
 	if any_full:
 		_pause_all_atb() # Pause all bars if any reached max
 
-	# Step 2: Find the first *truly* ready socket from our queue and start its turn.
+func _start_next_turn() -> void:
 	if not is_turn_active and not ready_sockets.is_empty():
 		# Sort by some criteria if needed (e.g., speed, or just take first)
 		# For now, just take the first one that became ready
@@ -141,12 +145,7 @@ func _resume_all_atb() -> void:
 			if atb.socket and not atb.socket.is_disabled() and not ready_sockets.has(atb.socket):
 				ready_sockets.append(atb.socket)
 
-	# Immediately start the next turn if possible
-	if not is_turn_active and not ready_sockets.is_empty():
-		var socket = ready_sockets.pop_front()
-		_pause_all_atb()
-		is_turn_active = true
-		_on_turnity_activated_turn(socket)
+	_start_next_turn()
 
 func _reset_all_highlights() -> void:
 	for p_bar in _players_infos:
@@ -158,6 +157,25 @@ func _reset_all_highlights() -> void:
 		var atb_anim = e_btn.get_node("ATB").get_node("AnimationPlayer")
 		if atb_anim.is_playing():
 			atb_anim.play("RESET")
+
+func _get_actor_from_socket(socket: TurnitySocket) -> BattleActor:
+	if not socket or not socket.actor:
+		return null
+	
+	return _get_actor_from_node(socket.actor)
+
+func _get_actor_from_node(node: Node) -> BattleActor:
+	if not node:
+		return null
+	
+	if node is BattlePlayerbar:
+		return node.actor
+	elif "data" in node and node.data is BattleActor:
+		return node.data
+	elif node.has_method("get_actor"):
+		return node.get_actor()
+
+	return null
 
 # Gets the correct node for visual feedback (the sprite on the battlefield)
 func _get_feedback_node(target_info_node: Node) -> Node:
@@ -184,6 +202,14 @@ func _apply_damage_feedback(node: Node) -> void:
 	shake_tween.tween_property(node, "position:x", original_x - 4, 0.1).set_trans(Tween.TRANS_SINE)
 	shake_tween.tween_property(node, "position:x", original_x, 0.05).set_trans(Tween.TRANS_SINE)
 
+func _animate_enemy_attack(enemy_node: Control) -> void:
+	var tween = create_tween()
+	var original_pos = enemy_node.position
+	tween.tween_property(enemy_node, "position", original_pos + Vector2(20, 0), 0.2).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.tween_property(enemy_node, "position", original_pos, 0.3).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+	await tween.finished
+
+
 func _show_combat_text(target_node: Node, amount: int) -> void:
 	if amount == 0:
 		return
@@ -203,9 +229,14 @@ func _on_turnity_activated_turn(socket: TurnitySocket) -> void:
 	current_active_socket = socket
 
 	# Reset is_defending at the start of the turn
-	var actor = socket.actor.data if socket.actor is TextureButton else socket.actor.actor
+	var actor = _get_actor_from_socket(socket)
 	if actor:
 		actor.is_defending = false
+		#Stop defend animation if any
+		if socket.actor is BattlePlayerbar:
+			var player_sprite = _get_feedback_node(socket.actor)
+			if player_sprite and player_sprite.has_method("stop_defend_anim"):
+				player_sprite.stop_defend_anim()
 
 	if socket.actor is BattlePlayerbar:
 		var player_bar: BattlePlayerbar = socket.actor
@@ -237,7 +268,7 @@ func _on_turnity_activated_turn(socket: TurnitySocket) -> void:
 				skills_button = b
 				break
 		if skills_button:
-			var skill_actor = current_active_socket.actor.data if current_active_socket.actor is TextureButton else current_active_socket.actor.actor
+			var skill_actor = _get_actor_from_socket(current_active_socket)
 			if skill_actor and skill_actor.known_skills.is_empty():
 				skills_button.disabled = true
 
@@ -250,6 +281,9 @@ func _on_turnity_activated_turn(socket: TurnitySocket) -> void:
 		# Basic Enemy AI: Attack a random player and end turn
 		var enemy_button: TextureButton = socket.actor
 		var random_player_bar: BattlePlayerbar = _players_infos.pick_random()
+
+		# Animate the attack
+		await _animate_enemy_attack(enemy_button)
 
 		# Create and process an attack on the random player
 		_create_attack_event(enemy_button, random_player_bar)
@@ -270,8 +304,15 @@ func _on_menu_button_pressed(button: BaseButton) -> void:
 	elif button.text == "Skills":
 		_show_skill_menu()
 	elif button.text == "Defend":
-		var defending_actor = current_active_socket.actor.data if current_active_socket.actor is TextureButton else current_active_socket.actor.actor
-		defending_actor.is_defending = true
+		var defending_actor = _get_actor_from_socket(current_active_socket)
+		if defending_actor:
+			defending_actor.is_defending = true
+
+		# Play the defend animation on the battlefield sprite
+		var player_sprite = _get_feedback_node(current_active_socket.actor)
+		if player_sprite and player_sprite.has_method("play_defend_anim"):
+			player_sprite.play_defend_anim()
+
 		_consume_player_turn(current_active_socket)
 	else:
 		print(button.text)
@@ -326,8 +367,13 @@ func _end_enemy_selection(confirmed: bool) -> void:
 			_consume_player_turn(current_active_socket)
 
 func _input(event: InputEvent) -> void:
-	# --- Ally Selection Input ---
-	if selecting_ally and event is InputEventKey and event.pressed and not event.echo:
+	if selecting_ally:
+		_handle_ally_selection_input(event)
+	elif selecting_enemies:
+		_handle_enemy_selection_input(event)
+
+func _handle_ally_selection_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo:
 		match event.keycode:
 			KEY_DOWN, KEY_RIGHT:
 				player_index = (player_index + 1) % _player_sprites.size()
@@ -343,42 +389,37 @@ func _input(event: InputEvent) -> void:
 			KEY_ESCAPE, KEY_BACKSPACE:
 				_end_ally_selection(false)
 				accept_event()
-		return # Stop further input processing
 
-# Intercept keys BEFORE GUI so TextureButtons/Menu don't also react WHEN we're in enemy selection.
-	if selecting_enemies:
-		if event is InputEventKey and event.pressed and not event.echo:
-			var enemies := _get_enemies()
-			if enemies.size() == 0:
-				return
-			match event.keycode:
-				KEY_RIGHT, KEY_DOWN:
-					var attempts := 0
-					while attempts < enemies.size():
-						enemy_index = (enemy_index + 1) % enemies.size()
-						if _is_enemy_selectable(enemies[enemy_index]):
-							enemies[enemy_index].grab_focus()
-							accept_event()
-							break
-						attempts += 1
-				KEY_LEFT, KEY_UP:
-					var attempts := 0
-					while attempts < enemies.size():
-						enemy_index = (enemy_index - 1 + enemies.size()) % enemies.size()
-						if _is_enemy_selectable(enemies[enemy_index]):
-							enemies[enemy_index].grab_focus()
-							accept_event()
-							break
-						attempts += 1
-				KEY_ENTER, KEY_KP_ENTER, KEY_SPACE:
-					_end_enemy_selection(true)
-					accept_event()
-				KEY_ESCAPE, KEY_BACKSPACE:
-					_end_enemy_selection(false)
-					accept_event()
-	# Make sure we return so GUI doesn't also handle these keys while selecting enemies
-	return
-# Otherwise, not selecting_enemies -> let the normal GUI system handle inputs
+func _handle_enemy_selection_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo:
+		var enemies := _get_enemies()
+		if enemies.size() == 0:
+			return
+		match event.keycode:
+			KEY_RIGHT, KEY_DOWN:
+				var attempts := 0
+				while attempts < enemies.size():
+					enemy_index = (enemy_index + 1) % enemies.size()
+					if _is_enemy_selectable(enemies[enemy_index]):
+						enemies[enemy_index].grab_focus()
+						accept_event()
+						break
+					attempts += 1
+			KEY_LEFT, KEY_UP:
+				var attempts := 0
+				while attempts < enemies.size():
+					enemy_index = (enemy_index - 1 + enemies.size()) % enemies.size()
+					if _is_enemy_selectable(enemies[enemy_index]):
+						enemies[enemy_index].grab_focus()
+						accept_event()
+						break
+					attempts += 1
+			KEY_ENTER, KEY_KP_ENTER, KEY_SPACE:
+				_end_enemy_selection(true)
+				accept_event()
+			KEY_ESCAPE, KEY_BACKSPACE:
+				_end_enemy_selection(false)
+				accept_event()
 
 
 func _consume_player_turn(socket: TurnitySocket) -> void:
@@ -559,6 +600,7 @@ func _check_battle_over() -> void:
 		_victory_screen.show()
 		await get_tree().create_timer(2.0, true).timeout
 		get_tree().paused = false
+		TurnityManager.reset_active_sockets()
 		get_tree().change_scene_to_file("res://Scenes/playground.tscn")
 		return
 
@@ -573,6 +615,7 @@ func _check_battle_over() -> void:
 		_defeat_screen.show()
 		await get_tree().create_timer(2.0, true).timeout
 		get_tree().paused = false
+		TurnityManager.reset_active_sockets()
 		get_tree().change_scene_to_file("res://Scenes/playground.tscn")
 
 
@@ -597,13 +640,14 @@ func _end_ally_selection(confirmed: bool) -> void:
 		# Find the corresponding BattlePlayerbar for the selected sprite
 		var target_player_bar = _players_infos[player_index]
 
-		var attacker_actor = current_active_socket.actor.data if current_active_socket.actor is TextureButton else current_active_socket.actor.actor
+		var attacker_actor = _get_actor_from_socket(current_active_socket)
 		var target_actor = target_player_bar.actor
 
 		_create_skill_event(current_skill_id, attacker_actor, target_actor, target_player_bar)
 		_process_next_event()
 		_consume_player_turn(current_active_socket)
 		_end_skill_selection()
+		_menu_cursor.hide()
 	else:
 		_end_skill_selection()
 
@@ -646,7 +690,7 @@ func _create_skill_event(skill_id: String, attacker: BattleActor, target: Battle
 
 
 func _show_skill_menu() -> void:
-	var current_actor: BattleActor = current_active_socket.actor.data if current_active_socket.actor is TextureButton else current_active_socket.actor.actor
+	var current_actor: BattleActor = _get_actor_from_socket(current_active_socket)
 	if not current_actor:
 		return
 
