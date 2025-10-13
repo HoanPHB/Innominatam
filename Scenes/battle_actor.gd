@@ -5,6 +5,7 @@ signal hp_changed(hp, change)
 var name: String = "ORC"
 var hp_max: int = 20
 var hp: int = hp_max
+var is_dead: bool = false
 
 # An array of strings that correspond to the keys in the Skills.gd database.
 var known_skills: Array[String] = []

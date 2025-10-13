@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://b6vkhno0wp8bb"]
 
-[ext_resource type="Texture2D" uid="uid://cxg6wnwgw413h" path="res://Assets/Ninepatch8x8.png" id="1_18laf"]
+[ext_resource type="Texture2D" uid="uid://cxg6wnwgw413h" path="res://assets/Ninepatch8x8.png" id="1_18laf"]
 
 [node name="Char_Status" type="NinePatchRect"]
 size_flags_horizontal = 3

@@ -1,7 +1,7 @@
 [gd_scene load_steps=6 format=3 uid="uid://b3pma7de3ckla"]
 
-[ext_resource type="Material" uid="uid://dp7dast1wjk82" path="res://Sprites/flash_material.tres" id="1_0qhha"]
-[ext_resource type="Texture2D" uid="uid://cs2kp3imvea61" path="res://Assets/Orc_selected1.png" id="1_71du1"]
+[ext_resource type="Material" uid="uid://dp7dast1wjk82" path="res://Shaders/flash_material.tres" id="1_0qhha"]
+[ext_resource type="Texture2D" uid="uid://cs2kp3imvea61" path="res://assets/Orc_selected1.png" id="1_71du1"]
 [ext_resource type="Script" uid="uid://bydsjlo87bdmr" path="res://Scenes/enemy_button.gd" id="2_p506s"]
 [ext_resource type="Script" uid="uid://xfkb3ycd1dxn" path="res://addons/turnity/turn_socket.gd" id="4_3yxsy"]
 [ext_resource type="PackedScene" uid="uid://dvpwnkiuhgy0" path="res://Scenes/atb.tscn" id="4_p17g8"]
@@ -14,6 +14,7 @@ texture_normal = ExtResource("1_71du1")
 script = ExtResource("2_p506s")
 
 [node name="ATB" parent="." instance=ExtResource("4_p17g8")]
+visible = false
 layout_mode = 1
 anchors_preset = -1
 anchor_left = 0.223

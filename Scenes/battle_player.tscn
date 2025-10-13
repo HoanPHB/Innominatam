@@ -1,9 +1,9 @@
 [gd_scene load_steps=8 format=3 uid="uid://bbeh2pg4xwut0"]
 
-[ext_resource type="Material" uid="uid://dp7dast1wjk82" path="res://Sprites/flash_material.tres" id="1_piakt"]
+[ext_resource type="Material" uid="uid://dp7dast1wjk82" path="res://Shaders/flash_material.tres" id="1_piakt"]
 [ext_resource type="Script" uid="uid://dd1nhs8wdasbm" path="res://Scenes/battle_player.gd" id="2_abcde"]
-[ext_resource type="Texture2D" uid="uid://b3s7rtu0n6ysu" path="res://Assets/SoldierIdle.png" id="2_piakt"]
-[ext_resource type="Texture2D" uid="uid://q574astu67f8" path="res://Assets/Defend-Icon.png" id="4_xhviq"]
+[ext_resource type="Texture2D" uid="uid://b3s7rtu0n6ysu" path="res://assets/SoldierIdle.png" id="2_piakt"]
+[ext_resource type="Texture2D" uid="uid://q574astu67f8" path="res://assets/Defend-Icon.png" id="4_xhviq"]
 
 [sub_resource type="Animation" id="Animation_aacdg"]
 length = 0.001

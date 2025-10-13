@@ -2,7 +2,7 @@
 
 [ext_resource type="PackedScene" uid="uid://dpsb0t1x46np0" path="res://Scenes/player.tscn" id="1_uof5o"]
 [ext_resource type="PackedScene" uid="uid://dhb1ta6oc1bhf" path="res://Tile Maps/Sprites/overworld.tscn" id="2_6xle2"]
-[ext_resource type="Texture2D" uid="uid://cs2kp3imvea61" path="res://Assets/Orc_selected1.png" id="3_u4ce8"]
+[ext_resource type="Texture2D" uid="uid://cs2kp3imvea61" path="res://assets/Orc_selected1.png" id="3_u4ce8"]
 [ext_resource type="Script" uid="uid://bgi3j40xohuvk" path="res://Scenes/battle_transition_test.gd" id="4_qyfof"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_qyfof"]

@@ -186,6 +186,28 @@ func _get_feedback_node(target_info_node: Node) -> Node:
 	# For enemies, the target node is already the correct sprite
 	return target_info_node
 
+func _play_enemy_death_animation(enemy_btn: TextureButton) -> void:
+	if not enemy_btn or not (enemy_btn.material is ShaderMaterial):
+		return
+	var mat := enemy_btn.material as ShaderMaterial
+	var tween := create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	# --- Step 1: Quick final red flash ---
+	mat.set_shader_parameter("flash_color", Color(1, 0, 0)) # red
+	tween.tween_property(mat, "shader_parameter/flash_modifier", 1.0, 0.15)
+	tween.tween_property(mat, "shader_parameter/flash_modifier", 0.0, 0.15)
+	
+	# --- Step 2: Start dissolve after flash ---
+	tween.tween_interval(0.2)
+	tween.tween_property(mat, "shader_parameter/fade_amount", 1.0, 1.6)
+	
+	# --- Step 3: Fade out sprite alpha completely ---
+	tween.tween_property(enemy_btn, "modulate:a", 0.0, 0.5)
+	
+	await tween.finished
+	enemy_btn.hide()
+
+
+
 func _apply_damage_feedback(node: Node) -> void:
 	# Ensure the node has our custom material
 	if not node.material is ShaderMaterial:
@@ -568,14 +590,30 @@ func _process_next_event() -> void:
 				if target_actor.hp <= 0 and target_info_node is TextureButton:
 					var btn: TextureButton = target_info_node
 					btn.disabled = true
-					btn.modulate = Color(0.5, 0.5, 0.5)
+					#btn.modulate = Color(0.5, 0.5, 0.5)
 					btn.tooltip_text = "%s (defeated)" % target_actor.name
 					# Optional: hide or remove focusability
 					btn.focus_mode = Control.FOCUS_NONE
+					# Mark the data as dead so ATB filling logic can ignore it immediately
+					if target_actor.has_meta("is_dead") == false: # not necessary if is_dead exists, safe-guard
+					# no-op: metadata not required; we're using the typed BattleActor flag
+						pass
+					target_actor.is_dead = true
+
+					# Stop and reset that enemy's ATB so it can't fill or re-enter ready queue
+					var atb = btn.get_node_or_null("ATB")
+					if atb:
+						atb.set_process(false)
+						if atb.has_method("reset"):
+							atb.reset()
+						# remove from our atb_nodes list so loops don't iterate it later (optional, but tidy)
+						if atb_nodes.has(atb):
+							atb_nodes.erase(atb)
 					# Also disable its Turnity socket
 					var socket: TurnitySocket = btn.get_node_or_null("TurnitySocket")
 					if socket:
 						socket.disable()
+					await _play_enemy_death_animation(btn)
 		"skill":
 			var skill_data: Dictionary = evt.get("skill_data")
 			var target_actor: BattleActor = evt.get("target", null)
