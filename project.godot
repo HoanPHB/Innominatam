@@ -21,6 +21,7 @@ Debug="*res://debug.gd"
 Enemies="*res://Scenes/enemies.gd"
 Skills="*res://Scenes/Skills.gd"
 TurnityManager="*res://addons/turnity/turn_manager.gd"
+BattleTransition="*res://Scenes/battle_transition.tscn"
 
 [debug]
 

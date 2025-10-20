@@ -26,6 +26,8 @@ var ready_sockets: Array[TurnitySocket] = [] # New: Managed by battle.gd
 @onready var _victory_screen: Control = $VictoryScreen
 @onready var _defeat_screen: Control = $DefeatScreen
 @onready var _actions_details: Control = $Options/Actions_Details
+@onready var player_buttons: Array = $Options/Players.get_children()
+@onready var enemy_buttons: Array = $Options/Enemies.get_children()
 
 var selecting_enemies: bool = false
 var enemy_index: int = 0
@@ -38,6 +40,8 @@ var current_skill_id: String = ""
 var party_members: Array = [] # Array[BattleActor]
 
 func _ready() -> void:
+	
+	await BattleTransition.fade_out(1.0)
 	# Disable menu and inputs until a player is ready
 	_options_menu.set_enabled(false)
 	for b in _options_menu.get_buttons():
@@ -57,6 +61,11 @@ func _ready() -> void:
 	_init_party_members()
 	_assign_party_to_bars()
 	_init_enemies()
+
+	for enemy in enemy_buttons:
+		enemy.modulate.a = 0.0
+	for player in player_buttons:
+		player.modulate.a = 0.0
 
 	_victory_screen = victory_screen_scene.instantiate()
 	add_child(_victory_screen)
@@ -79,6 +88,8 @@ func _ready() -> void:
 	for socket in TurnityManager.current_turnity_sockets:
 		socket.disable()
 	# --- End Turnity Setup ---
+
+	_slide_in_battle_actors()
 
 func _process(_delta: float) -> void:
 	if is_turn_active:
@@ -185,6 +196,53 @@ func _get_feedback_node(target_info_node: Node) -> Node:
 			return _player_sprites[player_index]
 	# For enemies, the target node is already the correct sprite
 	return target_info_node
+
+
+func _slide_in_battle_actors() -> void:
+	# Disable player input during intro
+	_pause_all_atb()
+	get_tree().paused = false
+
+	var tween = create_tween()
+	tween.set_parallel(true)
+
+	# --- Slide Enemies In (from left off-screen) ---
+	for enemy_btn in enemy_buttons:
+		if not is_instance_valid(enemy_btn):
+			continue
+
+		var start_pos = enemy_btn.position
+		enemy_btn.position.x = -enemy_btn.size.x
+		enemy_btn.modulate.a = 1.0
+		tween.tween_property(enemy_btn, "position", start_pos, 0.4)\
+			.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_SINE)
+		tween.tween_property(enemy_btn, "modulate:a", 1.0, 0.3)
+
+	# --- Slide Players In (from right off-screen) ---
+	for player_btn in player_buttons:
+		if not is_instance_valid(player_btn):
+			continue
+
+		var start_pos = player_btn.position
+		player_btn.position = start_pos + Vector2(get_viewport_rect().size.x, 0)
+		player_btn.modulate.a = 1.0
+		tween.tween_property(player_btn, "position", start_pos, 0.4)\
+			.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_SINE)
+		tween.tween_property(player_btn, "modulate:a", 1.0, 0.3)
+
+	$Options.modulate.a = 0.0
+	$Bottom.modulate.a = 0.0
+	$Options.show()
+	$Bottom.show()
+	tween.tween_property($Options, "modulate:a", 1.0, 0.5).set_delay(0.2)
+	tween.tween_property($Bottom, "modulate:a", 1.0, 0.5).set_delay(0.2)
+
+	await tween.finished
+
+	$Options.show()
+	$Bottom.show()
+	_resume_all_atb()
+	_start_next_turn()
 
 func _play_enemy_death_animation(enemy_btn: TextureButton) -> void:
 	if not enemy_btn or not (enemy_btn.material is ShaderMaterial):
