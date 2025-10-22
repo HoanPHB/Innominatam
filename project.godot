@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="Innominatam"
-run/main_scene="uid://cncxrpb7yg1i4"
+run/main_scene="uid://dtoxiq2pe278y"
 config/features=PackedStringArray("4.4", "Forward Plus")
 config/icon="res://icon.svg"
 
@@ -22,6 +22,8 @@ Enemies="*res://Scenes/enemies.gd"
 Skills="*res://Scenes/Skills.gd"
 TurnityManager="*res://addons/turnity/turn_manager.gd"
 BattleTransition="*res://Scenes/battle_transition.tscn"
+DialogManager="*res://Scenes/dialog_manager.tscn"
+SoundManager="*res://Scenes/sound_manager.tscn"
 
 [debug]
 

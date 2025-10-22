@@ -1,0 +1,16 @@
+[gd_scene load_steps=4 format=3 uid="uid://bdxa8gnudnpg5"]
+
+[ext_resource type="Script" uid="uid://bfnixfmp5ih0u" path="res://Scenes/SoundManager.gd" id="1_25ke0"]
+[ext_resource type="AudioStream" uid="uid://chxky0r2movmk" path="res://sounds/SFX/Melee_Hit.wav" id="1_32i44"]
+[ext_resource type="AudioStream" uid="uid://c6iqvmbvhx4y2" path="res://sounds/SFX/Simple_Heal.wav" id="3_1ohty"]
+
+[node name="SoundManager" type="Node"]
+script = ExtResource("1_25ke0")
+
+[node name="Melee_HIT" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("1_32i44")
+
+[node name="Simple_HEAL" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("3_1ohty")
+
+[node name="AudioStreamPlayer2D3" type="AudioStreamPlayer2D" parent="."]

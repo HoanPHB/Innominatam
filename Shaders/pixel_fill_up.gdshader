@@ -1,7 +1,7 @@
 shader_type canvas_item;
 
 uniform float progress : hint_range(0.0, 1.0) = 0.0;
-uniform float pixel_size : hint_range(1.0, 32.0) = 8.0;
+uniform float pixel_size : hint_range(1.0, 32.0) = 4.0;
 uniform vec4 color_light : source_color = vec4(1.0, 1.0, 1.0, 1.0);
 uniform vec4 color_dark  : source_color = vec4(0.0, 0.0, 0.0, 1.0);
 uniform sampler2D screen_tex : hint_screen_texture, filter_nearest, repeat_disable;

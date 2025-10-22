@@ -28,6 +28,7 @@ var ready_sockets: Array[TurnitySocket] = [] # New: Managed by battle.gd
 @onready var _actions_details: Control = $Options/Actions_Details
 @onready var player_buttons: Array = $Options/Players.get_children()
 @onready var enemy_buttons: Array = $Options/Enemies.get_children()
+@onready var _battle_music_player: AudioStreamPlayer2D = find_child("BattleMusicPlayer", true, false)
 
 var selecting_enemies: bool = false
 var enemy_index: int = 0
@@ -90,6 +91,16 @@ func _ready() -> void:
 	# --- End Turnity Setup ---
 
 	_slide_in_battle_actors()
+
+	if _battle_music_player:
+		_battle_music_player.stream = load("res://sounds/BGM/Battle 1.wav")
+		_battle_music_player.play()
+	else:
+		push_error("BattleMusicPlayer node not found in battle.tscn!")
+
+func _exit_tree() -> void:
+	if _battle_music_player:
+		_battle_music_player.stop()
 
 func _process(_delta: float) -> void:
 	if is_turn_active:
@@ -296,11 +307,11 @@ func _show_combat_text(target_node: Node, amount: int) -> void:
 
 	var fct = fct_scene.instantiate()
 	add_child(fct)
-	fct.global_position = target_node.global_position - Vector2(0, 16)
+	fct.global_position = target_node.global_position + Vector2(randf_range(-8, 8), randf_range(-24, -8))
 
-	var value_text = "+%d" % amount if amount > 0 else str(amount)
+	var value_text = str(abs(amount))
 	fct.show_value(value_text, fct_travel, fct_duration, fct_spread, false)
-	fct.modulate = Color.RED if amount < 0 else Color.PALE_GREEN
+	fct.modulate = Color.WHITE if amount < 0 else Color.PALE_GREEN
 
 func _on_turnity_activated_turn(socket: TurnitySocket) -> void:
 	# Clear all previous highlights before starting the new turn
@@ -642,6 +653,7 @@ func _process_next_event() -> void:
 
 				# Apply damage feedback if damage was taken
 				if hp_change < 0:
+					SoundManager.play_sfx("Melee_HIT")
 					_apply_damage_feedback(feedback_node)
 
 				# If target defeated, disable its button
@@ -672,16 +684,17 @@ func _process_next_event() -> void:
 					if socket:
 						socket.disable()
 					await _play_enemy_death_animation(btn)
+					_check_battle_over()
 		"skill":
 			var skill_data: Dictionary = evt.get("skill_data")
 			var target_actor: BattleActor = evt.get("target", null)
 			var target_info_node: Node = evt.get("target_node", null)
 
 			if skill_data.type == "healing":
+				SoundManager.play_sfx("Simple_HEAL")
 				var hp_change = target_actor.healhurt(skill_data.power)
 				var feedback_node = _get_feedback_node(target_info_node)
 				_show_combat_text(feedback_node, hp_change)
-	_check_battle_over()
 
 func _check_battle_over() -> void:
 	var all_enemies_defeated = true

@@ -1,6 +1,6 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=2 format=3 uid="uid://bbko2dwxgsld7"]
 
-[ext_resource type="Script" path="res://Scenes/fct.gd" id="1"]
+[ext_resource type="Script" uid="uid://d04guonj12dlj" path="res://Scenes/fct.gd" id="1"]
 
 [node name="FCT" type="Label"]
 script = ExtResource("1")

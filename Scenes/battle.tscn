@@ -1,4 +1,4 @@
-[gd_scene load_steps=22 format=3 uid="uid://cncxrpb7yg1i4"]
+[gd_scene load_steps=23 format=3 uid="uid://cncxrpb7yg1i4"]
 
 [ext_resource type="FontFile" uid="uid://vc186hdx1nna" path="res://fonts/PixelSerif_16px_v02.ttf" id="1_oxf17"]
 [ext_resource type="PackedScene" uid="uid://o5kqdnlu4h5l" path="res://Scenes/char_actions.tscn" id="2_f6xt6"]
@@ -14,6 +14,7 @@
 [ext_resource type="Theme" uid="uid://cee46fp1d8so6" path="res://Theme/buttonfont.tres" id="7_k7mbx"]
 [ext_resource type="PackedScene" uid="uid://bt7nhbmii1x83" path="res://Scenes/menu_cursor.tscn" id="12_rssjf"]
 [ext_resource type="PackedScene" uid="uid://r6rc0vdpvoum" path="res://Scenes/player_cursor.tscn" id="14_xkp4y"]
+[ext_resource type="AudioStream" uid="uid://cmaaveamp03pj" path="res://sounds/BGM/Battle 1.wav" id="15_vd41i"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_1ruyk"]
 
@@ -255,6 +256,9 @@ offset_right = -50.0
 offset_bottom = -144.0
 grow_horizontal = 2
 grow_vertical = 2
+
+[node name="BattleMusicPlayer" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("15_vd41i")
 
 [connection signal="button_focused" from="Options/Menu" to="." method="_on_menu_button_focused"]
 [connection signal="button_pressed" from="Options/Menu" to="." method="_on_menu_button_pressed"]
