@@ -6,7 +6,7 @@ func show_value(value, travel, duration, spread, crit=false):
 	var font = load("res://fonts/BoldPixels.ttf")
 	add_theme_font_override("font", font)
 	add_theme_font_size_override("font_size", 16)
-	add_theme_color_override("font_outline_color", Color.GRAY)
+	add_theme_color_override("font_outline_color", Color.BLACK)
 	add_theme_constant_override("outline_size", 8)
 
 	var movement = travel.rotated(randf_range(-spread/2, spread/2))

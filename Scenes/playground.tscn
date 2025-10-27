@@ -7,14 +7,12 @@
 [ext_resource type="Texture2D" uid="uid://cs2kp3imvea61" path="res://assets/Orc_selected1.png" id="3_u4ce8"]
 [ext_resource type="Script" uid="uid://bgi3j40xohuvk" path="res://Scenes/battle_trigger.gd" id="4_qyfof"]
 [ext_resource type="PackedScene" uid="uid://bpu0xk3f6n410" path="res://Scenes/battle_transition.tscn" id="5_3e07v"]
-[ext_resource type="Script" uid="uid://1bqlq3bw31ae" path="res://Scenes/dialog_test.gd" id="6_vl51c"]
+[ext_resource type="PackedScene" uid="uid://duyeno8r6fjju" path="res://Scenes/npc.tscn" id="8_m3lqc"]
 [ext_resource type="AudioStream" uid="uid://lrm4ghfqb7di" path="res://sounds/BGM/Title Theme.wav" id="8_wqftc"]
+[ext_resource type="PackedScene" uid="uid://dntejwojb8t3x" path="res://Scenes/item_pickup.tscn" id="10_6hjy0"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_qyfof"]
 size = Vector2(103, 79)
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_opmy1"]
-size = Vector2(56, 56)
 
 [node name="Playground" type="Node2D"]
 script = ExtResource("1_m3lqc")
@@ -45,12 +43,10 @@ shape = SubResource("RectangleShape2D_qyfof")
 
 [node name="BattleTransition" parent="." instance=ExtResource("5_3e07v")]
 
-[node name="Area2D" type="Area2D" parent="."]
-script = ExtResource("6_vl51c")
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
-position = Vector2(216, -88)
-shape = SubResource("RectangleShape2D_opmy1")
+[node name="NPC" parent="." instance=ExtResource("8_m3lqc")]
 
 [node name="AmbientMusic" type="AudioStreamPlayer2D" parent="."]
 stream = ExtResource("8_wqftc")
+
+[node name="ItemPickup" parent="." instance=ExtResource("10_6hjy0")]
+position = Vector2(62, -84)

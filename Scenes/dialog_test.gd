@@ -1,11 +1,20 @@
-extends Area2D
+extends Interactable
 
-func _on_body_entered(body):
-	if body.is_in_group("player"):
-		DialogManager.show_dialog(
-			"Knight",
-			"Be careful ahead! Monsters roam this area..."
-		)
+@onready var talk_bubble = $TalkBubble
 
-func _ready():
-	connect("body_entered", _on_body_entered)
+@export var dialog_lines: Array[String] = [
+	"Hello traveler!",
+	"The weather is nice today, isn't it?"
+]
+
+func on_area_enter(area):
+	if area.is_in_group("player_interact_zone"):
+		talk_bubble.show()
+
+func on_area_exit(area):
+	if area.is_in_group("player_interact_zone"):
+		talk_bubble.hide()
+
+func interact():
+	if not DialogManager.dialog_active:
+		DialogManager.show_dialog("NPC", dialog_lines)

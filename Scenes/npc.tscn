@@ -1,0 +1,18 @@
+[gd_scene load_steps=4 format=3 uid="uid://duyeno8r6fjju"]
+
+[ext_resource type="Script" uid="uid://1bqlq3bw31ae" path="res://Scenes/dialog_test.gd" id="1_xxsvc"]
+[ext_resource type="PackedScene" uid="uid://dbou0h5q1qiga" path="res://Scenes/talk_bubble.tscn" id="2_g6unj"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_opmy1"]
+size = Vector2(56, 56)
+
+[node name="NPC" type="Area2D"]
+visibility_layer = 2
+script = ExtResource("1_xxsvc")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(216, -88)
+shape = SubResource("RectangleShape2D_opmy1")
+
+[node name="TalkBubble" parent="." instance=ExtResource("2_g6unj")]
+position = Vector2(216, -119)
