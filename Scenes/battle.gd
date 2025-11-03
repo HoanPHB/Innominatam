@@ -573,17 +573,7 @@ func _on_players_button_pressed(button: BaseButton) -> void:
 
 # Initialize a simple set of party members for display/combat
 func _init_party_members() -> void:
-	var names := ["Prysha", "Ishamel", "Felix", "Casper"]
-	party_members.clear()
-	for n in names:
-		var a := BattleActor.new()
-		a.name = n
-		a.hp_max = 100
-		a.hp = a.hp_max
-		# Assign skills on a per-character basis.
-		if n == "Prysha":
-			a.known_skills = ["heal"]
-		party_members.append(a)
+	party_members = PartyManager.get_party()
 
 # Assign created actors to UI bars
 func _assign_party_to_bars() -> void:
@@ -687,8 +677,12 @@ func _process_next_event() -> void:
 					_check_battle_over()
 		"skill":
 			var skill_data: Dictionary = evt.get("skill_data")
+			var attacker_actor: BattleActor = evt.get("attacker", null)
 			var target_actor: BattleActor = evt.get("target", null)
 			var target_info_node: Node = evt.get("target_node", null)
+
+			if not attacker_actor.consume_mp(skill_data.mana_cost):
+				return # Should not happen due to the check in _on_skill_selected
 
 			if skill_data.type == "healing":
 				SoundManager.play_sfx("Simple_HEAL")
@@ -705,6 +699,7 @@ func _check_battle_over() -> void:
 			break
 
 	if all_enemies_defeated:
+		PartyManager.add_experience(100)
 		get_tree().paused = true
 		_victory_screen.show()
 		await get_tree().create_timer(2.0, true).timeout
@@ -872,6 +867,11 @@ func _show_skill_menu() -> void:
 func _on_skill_selected(skill_id: String):
 	var skill_data = Skills.data.get(skill_id)
 	if not skill_data:
+		return
+
+	var actor = _get_actor_from_socket(current_active_socket)
+	if actor.mp < skill_data.mana_cost:
+		SoundManager.play_sfx("UI_ERROR")
 		return
 
 	# Store the skill being used

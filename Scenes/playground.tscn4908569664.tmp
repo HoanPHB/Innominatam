@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=4 uid="uid://dtoxiq2pe278y"]
+[gd_scene load_steps=14 format=4 uid="uid://dtoxiq2pe278y"]
 
 [ext_resource type="Script" uid="uid://vcgd2datg016" path="res://Scenes/playground.gd" id="1_m3lqc"]
 [ext_resource type="PackedScene" uid="uid://dpsb0t1x46np0" path="res://Scenes/player.tscn" id="1_uof5o"]
@@ -10,6 +10,8 @@
 [ext_resource type="PackedScene" uid="uid://duyeno8r6fjju" path="res://Scenes/npc.tscn" id="8_m3lqc"]
 [ext_resource type="AudioStream" uid="uid://lrm4ghfqb7di" path="res://sounds/BGM/Title Theme.wav" id="8_wqftc"]
 [ext_resource type="PackedScene" uid="uid://dntejwojb8t3x" path="res://Scenes/item_pickup.tscn" id="10_6hjy0"]
+[ext_resource type="PackedScene" uid="uid://bkdxnrk53k1jo" path="res://Scenes/inventory_ui.tscn" id="11_abcde"]
+[ext_resource type="PackedScene" uid="uid://bwbwqe7x2j7x" path="res://Scenes/EquipmentMenu.tscn" id="12_fghij"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_qyfof"]
 size = Vector2(103, 79)
@@ -51,3 +53,8 @@ stream = ExtResource("8_wqftc")
 
 [node name="ItemPickup" parent="." instance=ExtResource("10_6hjy0")]
 position = Vector2(62, -84)
+
+[node name="InventoryUI" parent="." instance=ExtResource("11_abcde")]
+
+[node name="EquipmentMenu" parent="." instance=ExtResource("12_fghij")]
+visible = true

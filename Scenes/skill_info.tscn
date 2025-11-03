@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://vh2oh4tr0pno"]
 
-[ext_resource type="Texture2D" uid="uid://budl0xpkiwmnt" path="res://Assets/Ninepatch16x16.png" id="1_ninepatch_texture"]
+[ext_resource type="Texture2D" uid="uid://budl0xpkiwmnt" path="res://assets/Ninepatch16x16.png" id="1_ninepatch_texture"]
 
 [node name="SkillInfo" type="NinePatchRect"]
 offset_right = 40.0

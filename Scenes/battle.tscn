@@ -259,6 +259,7 @@ grow_vertical = 2
 
 [node name="BattleMusicPlayer" type="AudioStreamPlayer2D" parent="."]
 stream = ExtResource("15_vd41i")
+volume_db = -10.0
 
 [connection signal="button_focused" from="Options/Menu" to="." method="_on_menu_button_focused"]
 [connection signal="button_pressed" from="Options/Menu" to="." method="_on_menu_button_pressed"]

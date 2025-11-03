@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://dv1hx11gyoti8"
+path="res://.godot/imported/MAGAngl_BUFF-Buff Pickup_HY_PC-006.wav-05a874153ee3bfa6234518d79ada35e8.sample"
+
+[deps]
+
+source_file="res://Scenes/MAGAngl_BUFF-Buff Pickup_HY_PC-006.wav"
+dest_files=["res://.godot/imported/MAGAngl_BUFF-Buff Pickup_HY_PC-006.wav-05a874153ee3bfa6234518d79ada35e8.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

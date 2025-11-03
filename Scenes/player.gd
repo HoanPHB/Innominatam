@@ -23,21 +23,28 @@ func _ready():
 	$InteractArea.connect("area_entered", _on_area_entered)
 	$InteractArea.connect("area_exited", _on_area_exited)
 	DialogManager.dialog_finished.connect(_on_dialog_finished)
+	InventoryUI.menu_closed.connect(_on_menu_closed)
+	EquipmentMenu.menu_closed.connect(_on_menu_closed)
 	interaction_cooldown.one_shot = true
 	interaction_cooldown.wait_time = 0.2
 	interaction_cooldown.timeout.connect(func(): can_interact = true)
 	add_child(interaction_cooldown)
 	state_machine.Initialize(self)
 	add_to_group("player")
-	pass
 
 func _on_dialog_finished():
 	can_interact = false
 	interaction_cooldown.start()
 
+func _on_menu_closed():
+	can_interact = false
+	interaction_cooldown.start()
+
 func _process(delta):
-	if DialogManager.dialog_active:
+	if DialogManager.dialog_active or InventoryUI.menu_active or EquipmentMenu.menu_active:
 		direction = Vector2.ZERO
+		velocity = Vector2.ZERO
+		UpdateAnimation("idle")
 		return
 	#direction.x = Input.get_action_strength("right") - Input.get_action_strength("left")
 	#direction.y = Input.get_action_strength("down") - Input.get_action_strength("up")
@@ -81,4 +88,3 @@ func AnimDirection() -> String:
 		return "up"
 	else:
 		return "side"
-		

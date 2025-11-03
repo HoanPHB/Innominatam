@@ -24,6 +24,8 @@ func interact():
 
 func _collect_item(player):
 	print("Picked up:", item_name, "x", amount)
+	SoundManager.play_sfx("Pick_up")
+	InventoryManager.add_item(item_name, amount)
 	$Sprite2D.visible = false
 	_show_pickup_popup()
 

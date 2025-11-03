@@ -8,6 +8,7 @@ const data = {
 		"power": 25,
 		"target": "ally", # Can be 'ally', 'self', 'enemy'
 		"type": "healing",
+		"mana_cost": 10,
 		"description": "Restores a moderate amount of HP to one ally."
 	}
 }
