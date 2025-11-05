@@ -159,7 +159,6 @@ text = "Defend"
 alignment = 0
 
 [node name="Actions_Details" parent="Options" instance=ExtResource("4_lrv64")]
-visible = false
 layout_mode = 0
 offset_left = 51.0
 offset_top = 4.0

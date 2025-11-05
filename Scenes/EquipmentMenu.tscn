@@ -36,6 +36,8 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_constants/separation = 10
 
 [node name="MarginContainer" type="MarginContainer" parent="UIContainer/HBoxContainer"]
@@ -72,12 +74,14 @@ theme_override_constants/margin_bottom = 10
 [node name="EquipmentAndInventory" type="VBoxContainer" parent="UIContainer/HBoxContainer/MarginContainer2"]
 layout_mode = 2
 
-[node name="EquipmentSlots" type="VBoxContainer" parent="UIContainer"]
-layout_mode = 0
+[node name="Button" type="Button" parent="UIContainer/HBoxContainer/MarginContainer2/EquipmentAndInventory"]
+layout_mode = 2
 
-[node name="InventoryItemList" type="ItemList" parent="UIContainer"]
-layout_mode = 0
-size_flags_vertical = 3
+[node name="Button2" type="Button" parent="UIContainer/HBoxContainer/MarginContainer2/EquipmentAndInventory"]
+layout_mode = 2
+
+[node name="Button3" type="Button" parent="UIContainer/HBoxContainer/MarginContainer2/EquipmentAndInventory"]
+layout_mode = 2
 
 [node name="MenuCursor" parent="UIContainer" instance=ExtResource("3_defgh")]
 layout_mode = 0
@@ -88,3 +92,27 @@ offset_right = 0.0
 offset_bottom = 0.0
 grow_horizontal = 1
 grow_vertical = 1
+
+[node name="InventoryItemList" type="ItemList" parent="UIContainer"]
+visible = false
+layout_mode = 2
+offset_left = 58.0
+offset_top = 10.0
+offset_right = 247.0
+offset_bottom = 146.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="NinePatchRect2" type="NinePatchRect" parent="UIContainer/InventoryItemList"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_abcde")
+patch_margin_left = 4
+patch_margin_top = 4
+patch_margin_right = 4
+patch_margin_bottom = 4

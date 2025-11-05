@@ -7,7 +7,10 @@ func _ready():
 	# In a real game, this would be loaded from a save file
 	if party_members.is_empty():
 		var prysha = create_character("Prysha", 1, 100, 50, ["heal"])
+		prysha.equipment.weapon = "sword"
+		prysha.equipment.armor = "leather_armor"
 		var ishamel = create_character("Ishamel", 1, 120, 30, [])
+		ishamel.equipment.amulet = "amulet"
 		var felix = create_character("Felix", 1, 80, 70, [])
 		var casper = create_character("Casper", 1, 90, 60, [])
 		party_members = [prysha, ishamel, felix, casper]
