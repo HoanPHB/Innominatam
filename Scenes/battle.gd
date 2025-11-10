@@ -35,10 +35,19 @@ var enemy_index: int = 0
 
 var selecting_ally: bool = false
 var player_index: int = 0
+var selecting_all_enemies: bool = false
+var selecting_all_allies: bool = false
 var current_skill_id: String = ""
 
 # Simple party setup for this scene
 var party_members: Array = [] # Array[BattleActor]
+
+func _highlight_targets(nodes: Array, on: bool):
+	for node in nodes:
+		if on:
+			node.modulate = Color.BLUE
+		else:
+			node.modulate = Color.WHITE
 
 func _ready() -> void:
 	
@@ -62,6 +71,7 @@ func _ready() -> void:
 	_init_party_members()
 	_assign_party_to_bars()
 	_init_enemies()
+	print("Children of _enemies_root: ", _enemies_root.get_children())
 
 	for enemy in enemy_buttons:
 		enemy.modulate.a = 0.0
@@ -301,7 +311,7 @@ func _animate_enemy_attack(enemy_node: Control) -> void:
 	await tween.finished
 
 
-func _show_combat_text(target_node: Node, amount: int) -> void:
+func _show_combat_text(target_node: Node, amount: int, is_healing: bool = false) -> void:
 	if amount == 0:
 		return
 
@@ -311,7 +321,7 @@ func _show_combat_text(target_node: Node, amount: int) -> void:
 
 	var value_text = str(abs(amount))
 	fct.show_value(value_text, fct_travel, fct_duration, fct_spread, false)
-	fct.modulate = Color.WHITE if amount < 0 else Color.PALE_GREEN
+	fct.modulate = Color.PALE_GREEN if is_healing else Color.WHITE
 
 func _on_turnity_activated_turn(socket: TurnitySocket) -> void:
 	# Clear all previous highlights before starting the new turn
@@ -462,6 +472,82 @@ func _input(event: InputEvent) -> void:
 		_handle_ally_selection_input(event)
 	elif selecting_enemies:
 		_handle_enemy_selection_input(event)
+	elif selecting_all_enemies:
+		if event.is_action_pressed("ui_accept"):
+			_end_all_enemies_selection(true)
+		elif event.is_action_pressed("ui_cancel"):
+			_end_all_enemies_selection(false)
+	elif selecting_all_allies:
+		if event.is_action_pressed("ui_accept"):
+			_end_all_allies_selection(true)
+		elif event.is_action_pressed("ui_cancel"):
+			_end_all_allies_selection(false)
+
+func _begin_all_enemies_selection():
+	selecting_all_enemies = true
+	var enemy_nodes = []
+	for enemy_btn in _get_enemies():
+		if not enemy_btn.disabled and not enemy_btn.data.is_dead:
+			enemy_nodes.append(enemy_btn)
+	_highlight_targets(enemy_nodes, true)
+
+func _end_all_enemies_selection(confirmed: bool):
+	selecting_all_enemies = false
+	var enemy_nodes_to_highlight = []
+	for enemy_btn in _get_enemies():
+		enemy_nodes_to_highlight.append(enemy_btn)
+	_highlight_targets(enemy_nodes_to_highlight, false)
+
+	if confirmed:
+		var attacker_actor = _get_actor_from_socket(current_active_socket)
+		var skill_data = Skills.data.get(current_skill_id)
+		if attacker_actor and skill_data:
+			if not attacker_actor.consume_mp(skill_data.mana_cost):
+				SoundManager.play_sfx("UI_ERROR")
+				_end_skill_selection()
+				return
+		for enemy_btn in _get_enemies(): # Iterate over all enemies again to re-check status
+			if not enemy_btn.disabled and not enemy_btn.data.is_dead:
+				var enemy_actor = enemy_btn.data as BattleActor
+				print("Creating skill event for enemy: ", enemy_actor.name)
+				_create_skill_event(current_skill_id, attacker_actor, enemy_actor, enemy_btn)
+		_process_next_event()
+		_consume_player_turn(current_active_socket)
+		_end_skill_selection()
+
+func _begin_all_allies_selection():
+	selecting_all_allies = true
+	var ally_nodes = []
+	for i in range(party_members.size()):
+		# Check if the actor has HP
+		if party_members[i].hp > 0:
+			ally_nodes.append(_player_sprites[i])
+	_highlight_targets(ally_nodes, true)
+
+func _end_all_allies_selection(confirmed: bool):
+	selecting_all_allies = false
+	var ally_nodes_to_highlight = []
+	for i in range(party_members.size()):
+		if party_members[i].hp > 0:
+			ally_nodes_to_highlight.append(_player_sprites[i])
+	_highlight_targets(ally_nodes_to_highlight, false)
+
+	if confirmed:
+		var attacker_actor = _get_actor_from_socket(current_active_socket)
+		var skill_data = Skills.data.get(current_skill_id)
+		if attacker_actor and skill_data:
+			if not attacker_actor.consume_mp(skill_data.mana_cost):
+				SoundManager.play_sfx("UI_ERROR")
+				_end_skill_selection()
+				return
+		for i in range(party_members.size()):
+			# Check if the actor has HP
+			if party_members[i].hp > 0:
+				_create_skill_event(current_skill_id, attacker_actor, party_members[i], _players_infos[i])
+		_process_next_event()
+		_consume_player_turn(current_active_socket)
+		_end_skill_selection()
+
 
 func _handle_ally_selection_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
@@ -653,74 +739,100 @@ func _create_attack_event(attacker_node: Node, target_node: Node) -> void:
 
 # Process next event in the queue
 func _process_next_event() -> void:
-	if event_queue.is_empty():
-		return
-	var evt = event_queue.pop_front()
-	if typeof(evt) != TYPE_DICTIONARY:
-		return
-	match evt["type"]:
-		"attack":
-			var target_actor: BattleActor = evt.get("target", null)
-			var target_info_node: Node = evt.get("target_node", null)
-			if target_actor and target_info_node:
-				var hp_change = target_actor.take_damage(int(evt.get("power")))
+	while not event_queue.is_empty():
+		var evt = event_queue.pop_front()
+		print("Processing event: ", evt)
+		if typeof(evt) != TYPE_DICTIONARY:
+			continue
+		match evt["type"]:
+			"attack":
+				var target_actor: BattleActor = evt.get("target", null)
+				var target_info_node: Node = evt.get("target_node", null)
+				if target_actor and target_info_node:
+					var hp_change = target_actor.take_damage(int(evt.get("power")))
 
-				# Get the node to apply feedback to (the sprite on the battlefield)
-				var feedback_node = _get_feedback_node(target_info_node)
+					# Get the node to apply feedback to (the sprite on the battlefield)
+					var feedback_node = _get_feedback_node(target_info_node)
 
-				# Show floating combat text
-				_show_combat_text(feedback_node, hp_change)
+					# Show floating combat text
+					_show_combat_text(feedback_node, hp_change, false)
 
-				# Apply damage feedback if damage was taken
-				if hp_change < 0:
-					SoundManager.play_sfx("Melee_HIT")
-					_apply_damage_feedback(feedback_node)
+					# Apply damage feedback if damage was taken
+					if hp_change < 0:
+						SoundManager.play_sfx("Melee_HIT")
+						_apply_damage_feedback(feedback_node)
 
-				# If target defeated, disable its button
-				if target_actor.hp <= 0 and target_info_node is TextureButton:
-					var btn: TextureButton = target_info_node
-					btn.disabled = true
-					#btn.modulate = Color(0.5, 0.5, 0.5)
-					btn.tooltip_text = "%s (defeated)" % target_actor.name
-					# Optional: hide or remove focusability
-					btn.focus_mode = Control.FOCUS_NONE
-					# Mark the data as dead so ATB filling logic can ignore it immediately
-					if target_actor.has_meta("is_dead") == false: # not necessary if is_dead exists, safe-guard
-					# no-op: metadata not required; we're using the typed BattleActor flag
-						pass
-					target_actor.is_dead = true
+					# If target defeated, disable its button
+					if target_actor.hp <= 0 and target_info_node is TextureButton:
+						var btn: TextureButton = target_info_node
+						btn.disabled = true
+						#btn.modulate = Color(0.5, 0.5, 0.5)
+						btn.tooltip_text = "%s (defeated)" % target_actor.name
+						# Optional: hide or remove focusability
+						btn.focus_mode = Control.FOCUS_NONE
+						# Mark the data as dead so ATB filling logic can ignore it immediately
+						if target_actor.has_meta("is_dead") == false: # not necessary if is_dead exists, safe-guard
+						# no-op: metadata not required; we're using the typed BattleActor flag
+							pass
+						target_actor.is_dead = true
 
-					# Stop and reset that enemy's ATB so it can't fill or re-enter ready queue
-					var atb = btn.get_node_or_null("ATB")
-					if atb:
-						atb.set_process(false)
-						if atb.has_method("reset"):
-							atb.reset()
-						# remove from our atb_nodes list so loops don't iterate it later (optional, but tidy)
-						if atb_nodes.has(atb):
-							atb_nodes.erase(atb)
-					# Also disable its Turnity socket
-					var socket: TurnitySocket = btn.get_node_or_null("TurnitySocket")
-					if socket:
-						socket.disable()
-					await _play_enemy_death_animation(btn)
-					_check_battle_over()
-		"skill":
-			var skill_data: Dictionary = evt.get("skill_data")
-			var attacker_actor: BattleActor = evt.get("attacker", null)
-			var target_actor: BattleActor = evt.get("target", null)
-			var target_info_node: Node = evt.get("target_node", null)
+						# Stop and reset that enemy's ATB so it can't fill or re-enter ready queue
+						var atb = btn.get_node_or_null("ATB")
+						if atb:
+							atb.set_process(false)
+							if atb.has_method("reset"):
+								atb.reset()
+							# remove from our atb_nodes list so loops don't iterate it later (optional, but tidy)
+							if atb_nodes.has(atb):
+								atb_nodes.erase(atb)
+						# Also disable its Turnity socket
+						var socket: TurnitySocket = btn.get_node_or_null("TurnitySocket")
+						if socket:
+							socket.disable()
+						_play_enemy_death_animation(btn) # Removed await
+			"skill":
+				var skill_data: Dictionary = evt.get("skill_data")
+				var attacker_actor: BattleActor = evt.get("attacker", null)
+				var target_actor: BattleActor = evt.get("target", null)
+				var target_info_node: Node = evt.get("target_node", null)
 
-			if not attacker_actor.consume_mp(skill_data.mana_cost):
-				return # Should not happen due to the check in _on_skill_selected
-
-			if skill_data.type == "healing":
-				SoundManager.play_sfx("Simple_HEAL")
-				var attacker_faith = attacker_actor.get_effective_stat("faith")
-				var healing_amount = skill_data.power + attacker_faith
-				var hp_change = target_actor.healhurt(healing_amount)
-				var feedback_node = _get_feedback_node(target_info_node)
-				_show_combat_text(feedback_node, hp_change)
+				match skill_data.type:
+					"healing":
+						SoundManager.play_sfx("Simple_HEAL")
+						var attacker_faith = attacker_actor.get_effective_stat("faith")
+						var healing_amount = skill_data.power + attacker_faith
+						var hp_change = target_actor.healhurt(healing_amount)
+						var feedback_node = _get_feedback_node(target_info_node)
+						_show_combat_text(feedback_node, healing_amount, true) # Pass calculated healing_amount and true for is_healing
+					"damage":
+						var attacker_intelligence = attacker_actor.get_effective_stat("intelligence")
+						var target_defense = target_actor.get_effective_stat("defense")
+						var damage = (skill_data.power + attacker_intelligence) - target_defense
+						damage = max(1, int(damage * randf_range(0.9, 1.1)))
+						print("Enemy: ", target_actor.name, ", Calculated Damage: ", damage, ", Attacker Intelligence: ", attacker_intelligence, ", Target Defense: ", target_defense)
+						var hp_change = target_actor.take_damage(damage)
+						print("Enemy: ", target_actor.name, ", HP Change: ", hp_change, ", Current HP: ", target_actor.hp)
+						var feedback_node = _get_feedback_node(target_info_node)
+						_show_combat_text(feedback_node, damage, false) # Pass calculated damage and false for is_healing
+						if hp_change < 0:
+							SoundManager.play_sfx("Melee_HIT")
+							_apply_damage_feedback(feedback_node)
+						if target_actor.hp <= 0 and target_info_node is TextureButton:
+							var btn: TextureButton = target_info_node
+							btn.disabled = true
+							btn.focus_mode = Control.FOCUS_NONE
+							target_actor.is_dead = true
+							var atb = btn.get_node_or_null("ATB")
+							if atb:
+								atb.set_process(false)
+								if atb_nodes.has(atb):
+									atb_nodes.erase(atb)
+							var socket: TurnitySocket = btn.get_node_or_null("TurnitySocket")
+							if socket:
+								socket.disable()
+							_play_enemy_death_animation(btn) # Removed await
+	await get_tree().create_timer(5).timeout # Add a short delay here
+	_check_battle_over() # Moved outside the loop
 
 func _check_battle_over() -> void:
 	var all_enemies_defeated = true
@@ -914,8 +1026,11 @@ func _on_skill_selected(skill_id: String):
 		"ally":
 			_begin_ally_selection()
 		"enemy":
-			# TODO: Implement enemy selection for skills
-			pass
+			_begin_enemy_selection()
+		"all_allies":
+			_begin_all_allies_selection()
+		"all_enemies":
+			_begin_all_enemies_selection()
 		"self":
 			# TODO: Implement self-targeting skills
 			pass

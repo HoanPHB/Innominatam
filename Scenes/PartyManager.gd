@@ -6,13 +6,13 @@ func _ready():
 	# Initialize the party with some default members
 	# In a real game, this would be loaded from a save file
 	if party_members.is_empty():
-		var prysha = create_character("Prysha", 1, ["heal"])
+		var prysha = create_character("Prysha", 1, ["heal", "mass_restoration"])
 		prysha.equipment.weapon = "sword"
 		prysha.equipment.armor = "leather_armor"
 		var ishamel = create_character("Ishamel", 1, [])
 		ishamel.equipment.amulet = "amulet"
 		var felix = create_character("Felix", 1, [])
-		var casper = create_character("Casper", 1, [])
+		var casper = create_character("Casper", 1, ["fireball"])
 		party_members = [prysha, ishamel, felix, casper]
 
 func create_character(name: String, level: int, skills: Array) -> BattleActor:
