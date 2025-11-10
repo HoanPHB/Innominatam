@@ -50,3 +50,38 @@ func manahurt(value: int) -> int:
 	change = mp - mp_start
 	emit_signal("mp_changed", mp, change)
 	return change
+
+func get_effective_stat(stat_name: String) -> int:
+	var base_value: int = 0
+	match stat_name:
+		"strength":
+			base_value = stats.strength
+		"defense":
+			base_value = stats.defense
+		"dexterity":
+			base_value = stats.dexterity
+		"faith":
+			base_value = stats.faith
+		"intelligence":
+			base_value = stats.intelligence
+		"speed":
+			base_value = stats.speed
+		"hp_max":
+			base_value = hp_max
+		"mp_max":
+			base_value = mp_max
+		_:
+			push_warning("Attempted to get unknown stat: ", stat_name)
+			return 0
+	
+	return base_value + _get_equipment_bonus(stat_name)
+
+func _get_equipment_bonus(stat_name: String) -> int:
+	var total_bonus: int = 0
+	for slot in equipment:
+		var item_id = equipment[slot]
+		if item_id and Items.data.has(item_id):
+			var item_data = Items.data[item_id]
+			if item_data.has("bonuses") and item_data.bonuses.has(stat_name):
+				total_bonus += item_data.bonuses[stat_name]
+	return total_bonus

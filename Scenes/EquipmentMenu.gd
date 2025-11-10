@@ -236,8 +236,6 @@ func populate_equipment_slots():
 			cur_btn.focus_neighbor_bottom = next_btn.get_path()
 
 
-
-
 func _on_equipment_slot_selected(slot_type: String) -> void:
 	# Prevent reopening the same slot if already visible
 	if inventory_item_list.visible and current_slot_type == slot_type:
@@ -329,7 +327,6 @@ func _on_inventory_item_activated(index):
 	menu_cursor.set_active(true)
 	menu_cursor.scale = Vector2.ONE  # Reset the scale to normal size
 
-
 	# Defer UI refresh by one frame to prevent flicker / smear
 	call_deferred("_refresh_equipment_ui")
 
@@ -341,7 +338,6 @@ func _refresh_equipment_ui():
 		if button_slot_type == current_slot_type:
 			button.grab_focus()
 			break
-
 
 func _on_inventory_selection_changed(index):
 	_update_inventory_cursor_position()

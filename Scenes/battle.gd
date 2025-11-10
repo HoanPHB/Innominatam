@@ -67,7 +67,7 @@ func _ready() -> void:
 		enemy.modulate.a = 0.0
 	for player in player_buttons:
 		player.modulate.a = 0.0
-
+	
 	_victory_screen = victory_screen_scene.instantiate()
 	add_child(_victory_screen)
 	_victory_screen.hide()
@@ -574,12 +574,18 @@ func _on_players_button_pressed(button: BaseButton) -> void:
 # Initialize a simple set of party members for display/combat
 func _init_party_members() -> void:
 	party_members = PartyManager.get_party()
+	for member in party_members:
+		member.hp_max = member.get_effective_stat("hp_max")
+		member.mp_max = member.get_effective_stat("mp_max")
+		member.hp = member.hp_max
+		member.mp = member.mp_max
 
 # Assign created actors to UI bars
 func _assign_party_to_bars() -> void:
 	for i in range(min(party_members.size(), _players_infos.size())):
 		var bar: BattlePlayerbar = _players_infos[i]
 		bar.set_actor(party_members[i])
+		print("Assigned player actor to bar: ", bar.actor.name, " socket.actor: ", bar.socket.actor)
 
 func _init_enemies() -> void:
 	var enemy_nodes = _get_enemies()
@@ -589,12 +595,31 @@ func _init_enemies() -> void:
 		var template_name = "Orc" # Always use Orc for now
 		var enemy_template = Enemies.data[template_name]
 		var enemy_actor = enemy_template.duplicate() # Create a new instance
+		
+		enemy_actor.stats = Stats.new()
+		enemy_actor.level = 1 # Default level for enemies for now
+		enemy_actor.stats.level = enemy_actor.level
+		enemy_actor.stats.strength = enemy_actor.level * 4 + 6
+		enemy_actor.stats.defense = enemy_actor.level * 2 + 8
+		enemy_actor.stats.dexterity = enemy_actor.level * 3 + 4
+		enemy_actor.stats.faith = enemy_actor.level * 1 + 1
+		enemy_actor.stats.intelligence = enemy_actor.level * 1 + 1
+		enemy_actor.stats.speed = enemy_actor.level * 3 + 5
+		
+		enemy_actor.hp_max = enemy_actor.get_effective_stat("hp_max")
+		enemy_actor.mp_max = enemy_actor.get_effective_stat("mp_max")
 		enemy_actor.hp = enemy_actor.hp_max # Ensure full health
+		enemy_actor.mp = enemy_actor.mp_max
 		enemy_btn.data = enemy_actor
 		# Update enemy label
 		var name_label = enemy_btn.get_node_or_null("Name")
 		if name_label:
 			name_label.text = enemy_actor.name
+		
+		# Debug print for enemy socket actor
+		var socket = enemy_btn.get_node_or_null("TurnitySocket")
+		if socket:
+			print("Assigned enemy actor to button: ", enemy_actor.name, " socket.actor: ", socket.actor)
 
 # Build and queue an attack event
 func _create_attack_event(attacker_node: Node, target_node: Node) -> void:
@@ -612,12 +637,17 @@ func _create_attack_event(attacker_node: Node, target_node: Node) -> void:
 		target_actor = target_node.data
 
 	if attacker_actor and target_actor:
+		var attacker_strength = attacker_actor.get_effective_stat("strength")
+		var target_defense = target_actor.get_effective_stat("defense")
+		var damage = (attacker_strength * attacker_strength) / (attacker_strength + target_defense)
+		damage = max(1, int(damage * randf_range(0.9, 1.1)))
+		
 		var evt := {
 			"type": "attack",
 			"attacker": attacker_actor,
 			"target": target_actor,
 			"target_node": target_node, # Always store the target node
-			"power": 12
+			"power": damage
 		}
 		event_queue.append(evt)
 
@@ -633,7 +663,7 @@ func _process_next_event() -> void:
 			var target_actor: BattleActor = evt.get("target", null)
 			var target_info_node: Node = evt.get("target_node", null)
 			if target_actor and target_info_node:
-				var hp_change = target_actor.take_damage(int(evt.get("power", 10)))
+				var hp_change = target_actor.take_damage(int(evt.get("power")))
 
 				# Get the node to apply feedback to (the sprite on the battlefield)
 				var feedback_node = _get_feedback_node(target_info_node)
@@ -686,7 +716,9 @@ func _process_next_event() -> void:
 
 			if skill_data.type == "healing":
 				SoundManager.play_sfx("Simple_HEAL")
-				var hp_change = target_actor.healhurt(skill_data.power)
+				var attacker_faith = attacker_actor.get_effective_stat("faith")
+				var healing_amount = skill_data.power + attacker_faith
+				var hp_change = target_actor.healhurt(healing_amount)
 				var feedback_node = _get_feedback_node(target_info_node)
 				_show_combat_text(feedback_node, hp_change)
 
