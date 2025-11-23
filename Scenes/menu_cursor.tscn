@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://bt7nhbmii1x83"]
 
-[ext_resource type="Texture2D" uid="uid://dhd1b4piygcj8" path="res://Assets/Menu_cursor.png" id="1_762ss"]
+[ext_resource type="Texture2D" uid="uid://dhd1b4piygcj8" path="res://assets/Menu_cursor.png" id="1_762ss"]
 [ext_resource type="Script" uid="uid://u7hgnd86cmwt" path="res://Scenes/menu_cursor.gd" id="2_is3h6"]
 
 [node name="MenuCursor" type="TextureRect"]

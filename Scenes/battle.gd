@@ -2,6 +2,7 @@ extends Control
 
 # Floating Combat Text Settings
 var fct_scene = preload("res://Scenes/FCT.tscn")
+var menu_cursor_scene = preload("res://Scenes/menu_cursor.tscn") # Preload the menu cursor scene
 var fct_travel = Vector2(0, -40)
 var fct_duration = 1.2
 var fct_spread = 0
@@ -14,6 +15,7 @@ var current_active_socket: TurnitySocket
 var is_turn_active: bool = false
 var atb_nodes: Array = []
 var ready_sockets: Array[TurnitySocket] = [] # New: Managed by battle.gd
+var _active_target_cursors: Array[Node] = [] # To hold multiple target cursors
 
 @onready var _options: Char_Actions = $Options
 @onready var _options_menu: Menu = $Options/Menu
@@ -490,6 +492,14 @@ func _begin_all_enemies_selection():
 		if not enemy_btn.disabled and not enemy_btn.data.is_dead:
 			enemy_nodes.append(enemy_btn)
 	_highlight_targets(enemy_nodes, true)
+	
+	# Instantiate and position a menu cursor for each enemy
+	for enemy_node in enemy_nodes:
+		var new_cursor = menu_cursor_scene.instantiate()
+		add_child(new_cursor)
+		new_cursor.target = enemy_node
+		new_cursor.set_active(true)
+		_active_target_cursors.append(new_cursor)
 
 func _end_all_enemies_selection(confirmed: bool):
 	selecting_all_enemies = false
@@ -497,6 +507,11 @@ func _end_all_enemies_selection(confirmed: bool):
 	for enemy_btn in _get_enemies():
 		enemy_nodes_to_highlight.append(enemy_btn)
 	_highlight_targets(enemy_nodes_to_highlight, false)
+	
+	# Destroy all active target cursors
+	for cursor in _active_target_cursors:
+		cursor.queue_free()
+	_active_target_cursors.clear()
 
 	if confirmed:
 		var attacker_actor = _get_actor_from_socket(current_active_socket)
@@ -523,6 +538,14 @@ func _begin_all_allies_selection():
 		if party_members[i].hp > 0:
 			ally_nodes.append(_player_sprites[i])
 	_highlight_targets(ally_nodes, true)
+	
+	# Instantiate and position a menu cursor for each ally
+	for ally_node in ally_nodes:
+		var new_cursor = menu_cursor_scene.instantiate()
+		add_child(new_cursor)
+		new_cursor.target = ally_node
+		new_cursor.set_active(true)
+		_active_target_cursors.append(new_cursor)
 
 func _end_all_allies_selection(confirmed: bool):
 	selecting_all_allies = false
@@ -531,6 +554,11 @@ func _end_all_allies_selection(confirmed: bool):
 		if party_members[i].hp > 0:
 			ally_nodes_to_highlight.append(_player_sprites[i])
 	_highlight_targets(ally_nodes_to_highlight, false)
+	
+	# Destroy all active target cursors
+	for cursor in _active_target_cursors:
+		cursor.queue_free()
+	_active_target_cursors.clear()
 
 	if confirmed:
 		var attacker_actor = _get_actor_from_socket(current_active_socket)
@@ -866,8 +894,6 @@ func _check_battle_over() -> void:
 		TurnityManager.reset_active_sockets()
 		get_tree().change_scene_to_file("res://Scenes/playground.tscn")
 
-
-
 func _begin_ally_selection() -> void:
 	selecting_ally = true
 	player_index = 0
@@ -875,6 +901,11 @@ func _begin_ally_selection() -> void:
 	for p in _player_sprites:
 		p.focus_mode = Control.FOCUS_ALL
 	_player_sprites[player_index].grab_focus()
+	
+	# Activate and position the menu cursor on the first selected ally
+	if _menu_cursor:
+		_menu_cursor.target = _player_sprites[player_index]
+		_menu_cursor.set_active(true)
 
 
 func _end_ally_selection(confirmed: bool) -> void:
@@ -895,7 +926,6 @@ func _end_ally_selection(confirmed: bool) -> void:
 		_process_next_event()
 		_consume_player_turn(current_active_socket)
 		_end_skill_selection()
-		_menu_cursor.hide()
 	else:
 		_end_skill_selection()
 
@@ -987,6 +1017,7 @@ func _show_skill_menu() -> void:
 		var skill_button = Button.new()
 		skill_button.text = skill_data.name
 		skill_button.pressed.connect(func(): _on_skill_selected(skill_id))
+		skill_button.add_to_group("skill_buttons") # Add to group
 		_actions_details.get_node("SkillList").add_child(skill_button)
 		skill_buttons.append(skill_button)
 
@@ -1017,6 +1048,18 @@ func _on_skill_selected(skill_id: String):
 	if actor.mp < skill_data.mana_cost:
 		SoundManager.play_sfx("UI_ERROR")
 		return
+
+	# Release focus from the skill menu
+	var focus_owner := get_viewport().gui_get_focus_owner()
+	if focus_owner and focus_owner.is_in_group("skill_buttons"): # Assuming skill buttons are in a group
+		focus_owner.release_focus()
+	
+	# Deactivate the main menu cursor
+	if _menu_cursor:
+		if _menu_cursor.has_method("set_active"):
+			_menu_cursor.set_active(false)
+		elif _menu_cursor.has_method("hide"):
+			_menu_cursor.hide()
 
 	# Store the skill being used
 	current_skill_id = skill_id

@@ -11,7 +11,10 @@ func _ready() -> void:
 
 func set_active(on: bool) -> void:
 	active = on
-	if not active:
+	if active:
+		show()
+		set_process(true)
+	else:
 		hide()
 		set_process(false)
 

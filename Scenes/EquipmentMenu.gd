@@ -243,6 +243,7 @@ func _on_equipment_slot_selected(slot_type: String) -> void:
 
 	current_slot_type = slot_type
 	populate_inventory(slot_type)
+	menu_cursor.set_active(false) # Deactivate main cursor when item list opens
 	inventory_item_list.visible = true
 	inventory_item_list.grab_focus()
 
@@ -392,6 +393,7 @@ func _handle_ui_cancel_logic():
 			for s in slots:
 				if s.get_meta("slot_type", "") == current_slot_type and s is Control:
 					s.grab_focus()
+					menu_cursor.set_active(true) # Reactivate main cursor
 					get_viewport().set_input_as_handled()
 					return
 		# fallback: focus first equipment button
@@ -423,6 +425,5 @@ func _update_inventory_cursor_position():
 				item_rect.size.x / menu_cursor.texture.get_width(),
 				item_rect.size.y / menu_cursor.texture.get_height()
 			)
-		menu_cursor.set_active(true)
 	else:
 		menu_cursor.set_active(false)
