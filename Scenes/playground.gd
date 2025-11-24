@@ -27,6 +27,10 @@ func _ready() -> void:
 		print("PLAYGROUND_READY: Found BattleTrigger: %s" % trigger_node.unique_id)
 		if WorldState.defeated_triggers.has(trigger_node.unique_id):
 			print("PLAYGROUND_READY: Removing defeated trigger: %s" % trigger_node.unique_id)
+			var parent_node = trigger_node.get_parent()
+			if parent_node and parent_node is CanvasItem: # Check if parent is a visual node
+				print("PLAYGROUND_READY: Hiding parent of trigger: %s" % parent_node.name)
+				parent_node.hide() # Hide the parent sprite
 			trigger_node.set_deferred("monitoring", false) # Immediately disable collision
 			trigger_node.queue_free()
 

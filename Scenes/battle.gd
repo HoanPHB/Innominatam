@@ -873,7 +873,7 @@ func _check_battle_over() -> void:
 
 	if all_enemies_defeated:
 		PartyManager.add_experience(100)
-		get_tree().paused = true
+		get_tree().paused = false
 		_victory_screen.show()
 		await get_tree().create_timer(2.0, true).timeout
 		get_tree().paused = false
