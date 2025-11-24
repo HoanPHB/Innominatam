@@ -4,19 +4,33 @@ const data = {
     "sword": {
         "name": "Sword",
         "type": "weapon",
-        "attack": 5,
-        "description": "A basic sword."
+        "description": "A basic sword.",
+        "bonuses": {
+            "strength": 5
+        }
     },
     "leather_armor": {
         "name": "Leather Armor",
         "type": "armor",
-        "defense": 5,
-        "description": "A basic set of leather armor."
+        "description": "A basic set of leather armor.",
+        "bonuses": {
+            "defense": 5
+        }
     },
     "amulet": {
         "name": "Amulet",
         "type": "amulet",
-        "defense": 2,
-        "description": "A simple amulet."
+        "description": "A simple amulet.",
+        "bonuses": {
+            "defense": 2
+        }
+    },
+    "Diamond Sword": {
+        "name": "Diamond Sword",
+        "type": "weapon",
+        "description": "A powerful sword made of diamond.",
+        "bonuses": {
+            "strength": 20
+        }
     }
 }

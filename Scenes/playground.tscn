@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=4 uid="uid://dtoxiq2pe278y"]
+[gd_scene load_steps=13 format=4 uid="uid://dtoxiq2pe278y"]
 
 [ext_resource type="Script" uid="uid://vcgd2datg016" path="res://Scenes/playground.gd" id="1_m3lqc"]
 [ext_resource type="PackedScene" uid="uid://dpsb0t1x46np0" path="res://Scenes/player.tscn" id="1_uof5o"]
@@ -6,7 +6,6 @@
 [ext_resource type="Texture2D" uid="uid://dfhtxsb1rxvin" path="res://assets/Generic Male NPCs.png" id="3_73bjl"]
 [ext_resource type="Texture2D" uid="uid://cs2kp3imvea61" path="res://assets/Orc_selected1.png" id="3_u4ce8"]
 [ext_resource type="Script" uid="uid://bgi3j40xohuvk" path="res://Scenes/battle_trigger.gd" id="4_qyfof"]
-[ext_resource type="PackedScene" uid="uid://bpu0xk3f6n410" path="res://Scenes/battle_transition.tscn" id="5_3e07v"]
 [ext_resource type="PackedScene" uid="uid://bvacrgcxv24gv" path="res://Tile Maps/gentle_forest.tscn" id="6_73bjl"]
 [ext_resource type="PackedScene" uid="uid://c8bw6lsopxnyp" path="res://Tile Maps/houses.tscn" id="7_v5c3b"]
 [ext_resource type="PackedScene" uid="uid://duyeno8r6fjju" path="res://Scenes/npc.tscn" id="8_m3lqc"]
@@ -23,6 +22,16 @@ script = ExtResource("1_m3lqc")
 position = Vector2(138, -375)
 scale = Vector2(2, 2)
 texture = ExtResource("3_u4ce8")
+
+[node name="BattleTrigger" type="Area2D" parent="Goblin"]
+position = Vector2(-69, 187.5)
+scale = Vector2(0.5, 0.5)
+script = ExtResource("4_qyfof")
+unique_id = "OrcEncounter_1"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Goblin/BattleTrigger"]
+position = Vector2(131, -376)
+shape = SubResource("RectangleShape2D_qyfof")
 
 [node name="MaleNPC" type="Sprite2D" parent="."]
 position = Vector2(216, -84)
@@ -49,15 +58,6 @@ tile_map_data = PackedByteArray("AAAiAAwAAQABAAUAAAAiAA0AAQABAAYAAAAiAA4AAQABAAU
 [node name="Houses" parent="." instance=ExtResource("7_v5c3b")]
 tile_map_data = PackedByteArray("AAAFAPn/AQAMABUAAAAFAPr/AQAMABYAAAAFAPv/AQAMABcAAAAGAPn/AQANABUAAAAGAPr/AQANABYAAAAGAPv/AQANABcAAAAHAPn/AQAOABUAAAAHAPr/AQAOABYAAAAHAPv/AQAOABcAAAAIAPn/AQAPABUAAAAIAPr/AQAPABYAAAAIAPv/AQAPABcAAAAJAPn/AQAQABUAAAAJAPr/AQATABYAAAAJAPv/AQATABcAAAAKAPn/AQARABUAAAAKAPr/AQARABYAAAAKAPv/AQARABcAAAAFAPT/AQAMAA8AAAAFAPX/AQAMABAAAAAFAPb/AQAMABEAAAAFAPf/AQAMABIAAAAFAPj/AQAMABMAAAAGAPP/AQANAA4AAAAGAPT/AQANAA8AAAAGAPX/AQANABAAAAAGAPb/AQANABEAAAAGAPf/AQANABIAAAAGAPj/AQANABMAAAAHAPL/AQAOAA0AAAAHAPP/AQAOAA4AAAAHAPT/AQAOAA8AAAAHAPX/AQAOABAAAAAHAPb/AQAOABEAAAAHAPf/AQAOABIAAAAHAPj/AQAOABMAAAAIAPL/AQAPAA0AAAAIAPP/AQAPAA4AAAAIAPT/AQAPAA8AAAAIAPX/AQAPABAAAAAIAPb/AQAPABEAAAAIAPf/AQAPABIAAAAIAPj/AQAPABMAAAAJAPP/AQAQAA4AAAAJAPT/AQAQAA8AAAAJAPX/AQAQABAAAAAJAPb/AQAQABEAAAAJAPf/AQAQABIAAAAJAPj/AQAQABMAAAAKAPT/AQARAA8AAAAKAPX/AQARABAAAAAKAPb/AQARABEAAAAKAPf/AQARABIAAAAKAPj/AQARABMAAAA=")
 
-[node name="BattleTrigger" type="Area2D" parent="."]
-script = ExtResource("4_qyfof")
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="BattleTrigger"]
-position = Vector2(131, -376)
-shape = SubResource("RectangleShape2D_qyfof")
-
-[node name="BattleTransition" parent="." instance=ExtResource("5_3e07v")]
-
 [node name="NPC" parent="." instance=ExtResource("8_m3lqc")]
 dialog_lines = Array[String](["Hello traveler!", "The weather is nice today, isn't it?", "Watch out for the goblin over there"])
 
@@ -66,3 +66,4 @@ stream = ExtResource("8_wqftc")
 
 [node name="ItemPickup" parent="." instance=ExtResource("10_6hjy0")]
 position = Vector2(62, -84)
+unique_id = "DiamondSword1"

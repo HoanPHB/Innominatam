@@ -261,17 +261,9 @@ func populate_inventory(slot_type):
 	var db := _get_items_db()
 
 	if equipped_item_name:
-		var equipped_item_data = db.get(equipped_item_name)
-		var equipped_label: String
-		if equipped_item_data:
-			equipped_label = "%s (Equipped)" % equipped_item_data.name
-		else:
-			equipped_label = "%s (Equipped)" % equipped_item_name
-		var idx = inventory_item_list.add_item(equipped_label)
-		inventory_item_list.set_item_metadata(idx, {"name": equipped_item_name, "equipped": true, "slot_type": slot_type})
-	else:
-		var idx_empty = inventory_item_list.add_item("Empty (Equipped)")
-		inventory_item_list.set_item_metadata(idx_empty, {"name": "", "equipped": true, "slot_type": slot_type})
+		var idx = inventory_item_list.add_item("Unequip")
+		inventory_item_list.set_item_metadata(idx, {"action": "unequip", "slot_type": slot_type})
+
 
 	for item_name in InventoryManager.inventory:
 		if item_name == equipped_item_name:
@@ -296,33 +288,25 @@ func populate_inventory(slot_type):
 	if inventory_item_list.item_count == 0:
 		inventory_item_list.add_item("Empty (None)")
 
-	if inventory_item_list.item_count <= 1:
-		var debug_names = []
-		match slot_type:
-			"weapon":
-				debug_names = ["Debug Sword", "Rusty Dagger"]
-			"armor":
-				debug_names = ["Cloth Shirt", "Leather Vest"]
-			"amulet":
-				debug_names = ["Wood Charm", "Copper Amulet"]
-		for dbg in debug_names:
-			var idxd = inventory_item_list.add_item(dbg)
-			inventory_item_list.set_item_metadata(idxd, {"name": dbg, "equipped": false, "slot_type": slot_type})
-
 func _on_inventory_item_activated(index):
 	var meta = inventory_item_list.get_item_metadata(index)
 	if typeof(meta) != TYPE_DICTIONARY:
 		return
-	var item_name: String = meta.get("name", "")
-	if item_name == "":
-		return
-	var slot_type = meta.get("slot_type", "")
-	if slot_type == "":
-		var db := _get_items_db()
-		if db.has(item_name):
-			slot_type = db.get(item_name).type
 
-	equip_item(current_character, slot_type, item_name)
+	if meta.has("action") and meta.get("action") == "unequip":
+		var slot_to_unequip = meta.get("slot_type")
+		unequip_item(current_character, slot_to_unequip)
+	else:
+		var item_name: String = meta.get("name", "")
+		if item_name == "":
+			return
+		var slot_type = meta.get("slot_type", "")
+		if slot_type == "":
+			var db := _get_items_db()
+			if db.has(item_name):
+				slot_type = db.get(item_name).type
+		equip_item(current_character, slot_type, item_name)
+
 	inventory_item_list.visible = false
 
 	menu_cursor.set_active(true)

@@ -8,6 +8,7 @@ const data = {
 		"power": 25,
 		"target": "ally", # Can be 'ally', 'self', 'enemy', 'all_allies', 'all_enemies'
 		"type": "healing",
+		"scaling_stat": "faith",
 		"mana_cost": 10,
 		"description": "Restores a moderate amount of HP to one ally."
 	},
@@ -16,6 +17,7 @@ const data = {
 		"power": 20,
 		"target": "all_enemies",
 		"type": "damage",
+		"scaling_stat": "intelligence",
 		"mana_cost": 15,
 		"description": "Deals medium fire damage to all enemies."
 	},
@@ -24,6 +26,7 @@ const data = {
 		"power": 15,
 		"target": "all_allies",
 		"type": "healing",
+		"scaling_stat": "faith",
 		"mana_cost": 20,
 		"description": "Restores a small amount of HP to all allies."
 	}

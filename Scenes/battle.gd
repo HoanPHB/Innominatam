@@ -824,20 +824,21 @@ func _process_next_event() -> void:
 				var target_actor: BattleActor = evt.get("target", null)
 				var target_info_node: Node = evt.get("target_node", null)
 
+				var scaling_stat_name = skill_data.get("scaling_stat", "strength")
+				var attacker_scaling_stat = attacker_actor.get_effective_stat(scaling_stat_name)
+				
 				match skill_data.type:
 					"healing":
 						SoundManager.play_sfx("Simple_HEAL")
-						var attacker_faith = attacker_actor.get_effective_stat("faith")
-						var healing_amount = skill_data.power + attacker_faith
+						var healing_amount = skill_data.power + attacker_scaling_stat
 						var hp_change = target_actor.healhurt(healing_amount)
 						var feedback_node = _get_feedback_node(target_info_node)
 						_show_combat_text(feedback_node, healing_amount, true) # Pass calculated healing_amount and true for is_healing
 					"damage":
-						var attacker_intelligence = attacker_actor.get_effective_stat("intelligence")
 						var target_defense = target_actor.get_effective_stat("defense")
-						var damage = (skill_data.power + attacker_intelligence) - target_defense
+						var damage = (skill_data.power + attacker_scaling_stat) - target_defense
 						damage = max(1, int(damage * randf_range(0.9, 1.1)))
-						print("Enemy: ", target_actor.name, ", Calculated Damage: ", damage, ", Attacker Intelligence: ", attacker_intelligence, ", Target Defense: ", target_defense)
+						print("Enemy: ", target_actor.name, ", Calculated Damage: ", damage, ", Attacker Intelligence: ", attacker_scaling_stat, ", Target Defense: ", target_defense)
 						var hp_change = target_actor.take_damage(damage)
 						print("Enemy: ", target_actor.name, ", HP Change: ", hp_change, ", Current HP: ", target_actor.hp)
 						var feedback_node = _get_feedback_node(target_info_node)
@@ -877,7 +878,8 @@ func _check_battle_over() -> void:
 		await get_tree().create_timer(2.0, true).timeout
 		get_tree().paused = false
 		TurnityManager.reset_active_sockets()
-		get_tree().change_scene_to_file("res://Scenes/playground.tscn")
+		await BattleTransition.fade_in(1.0) # Play fade-in to cover the screen
+		get_tree().change_scene_to_file(WorldState.previous_scene_path)
 		return
 
 	var all_players_defeated = true
@@ -892,7 +894,8 @@ func _check_battle_over() -> void:
 		await get_tree().create_timer(2.0, true).timeout
 		get_tree().paused = false
 		TurnityManager.reset_active_sockets()
-		get_tree().change_scene_to_file("res://Scenes/playground.tscn")
+		await BattleTransition.fade_in(1.0) # Play fade-in to cover the screen
+		get_tree().change_scene_to_file(WorldState.previous_scene_path)
 
 func _begin_ally_selection() -> void:
 	selecting_ally = true

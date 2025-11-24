@@ -31,6 +31,7 @@ InventoryUI="*res://Scenes/inventory_ui.tscn"
 EquipmentMenu="*res://Scenes/EquipmentMenu.tscn"
 InputManager="*res://Scenes/InputManager.gd"
 SaveManager="*res://Scenes/SaveManager.gd"
+WorldState="*res://Scenes/WorldState.gd"
 
 [debug]
 

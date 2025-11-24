@@ -90,7 +90,7 @@ func level_up(member: BattleActor):
 	member.stats.level = member.level
 	member.stats.xp -= member.stats.xp_to_next_level
 	member.stats.xp_to_next_level = int(member.stats.xp_to_next_level * 1.5)
-	
+
 	match member.name:
 		"Prysha": # Healer
 			member.stats.strength += 1

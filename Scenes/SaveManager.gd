@@ -17,11 +17,19 @@ func save_game(extra_data: Dictionary = {}) -> Error:
 	for key in extra_data:
 		save_data[key] = extra_data[key]
 
+	# Store WorldState data
+	save_data["picked_up_items"] = WorldState.picked_up_items
+	save_data["defeated_triggers"] = WorldState.defeated_triggers
+	save_data["player_position"] = {"x": WorldState.player_position.x, "y": WorldState.player_position.y}
+	save_data["player_position_set"] = WorldState.player_position_set
+	print("SAVEMANAGER_SAVE: player_position_set being saved: %s" % save_data["player_position_set"])
+
 	var file = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file == null:
 		push_error("Failed to open save file for writing: ", SAVE_PATH)
 		return ERR_CANT_CREATE
 
+	print("SAVEMANAGER_SAVE: Full save_data JSON string: %s" % JSON.stringify(save_data, "\t"))
 	file.store_string(JSON.stringify(save_data, "\t"))
 	file.close()
 	print("Game saved successfully to ", SAVE_PATH)
@@ -54,9 +62,33 @@ func load_game() -> Dictionary:
 			var actor = _deserialize_battle_actor(member_data)
 			PartyManager.party_members.append(actor)
 
-	# Load InventoryManager data
-	if save_data.has("inventory"):
-		InventoryManager.inventory = save_data["inventory"]
+		# Load InventoryManager data
+		if save_data.has("inventory"):
+			InventoryManager.inventory = save_data["inventory"]
+	
+		# Load WorldState data
+	var loaded_picked_up_items: Array = save_data.get("picked_up_items", [])
+	WorldState.picked_up_items.clear()
+	for item_name in loaded_picked_up_items:
+		if typeof(item_name) == TYPE_STRING:
+			WorldState.picked_up_items.append(item_name)
+
+	var loaded_defeated_triggers: Array = save_data.get("defeated_triggers", [])
+	WorldState.defeated_triggers.clear()
+	for trigger_name in loaded_defeated_triggers:
+		if typeof(trigger_name) == TYPE_STRING:
+			WorldState.defeated_triggers.append(trigger_name)
+	
+	# Load player_position and convert it back to Vector2
+	var saved_pos_data = save_data.get("player_position", {"x": 0.0, "y": 0.0}) # Default to a dictionary
+	if typeof(saved_pos_data) == TYPE_DICTIONARY and saved_pos_data.has("x") and saved_pos_data.has("y"):
+		WorldState.player_position = Vector2(saved_pos_data["x"], saved_pos_data["y"])
+	else: # Fallback for old saves or corrupted data
+		WorldState.player_position = Vector2.ZERO
+	
+	WorldState.player_position_set = save_data.get("player_position_set", false)
+	print("SAVEMANAGER_LOAD: Loaded WorldState.player_position: %s" % WorldState.player_position)
+	print("SAVEMANAGER_LOAD: Loaded WorldState.player_position_set: %s" % WorldState.player_position_set)
 
 	print("Game loaded successfully from ", SAVE_PATH)
 	return save_data

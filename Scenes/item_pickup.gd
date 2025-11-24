@@ -1,8 +1,10 @@
+class_name ItemPickup
 extends Interactable
 
 @export var item_name: String = "Diamond Sword"
 @export var amount: int = 1
 @export var auto_pickup: bool = false  # Optional: auto pickup when touched
+@export var unique_id: String = "" # Unique identifier for this item pickup instance
 
 @onready var sprite = $Sprite2D
 
@@ -23,6 +25,10 @@ func interact():
 		_collect_item(get_tree().get_first_node_in_group("player"))
 
 func _collect_item(player):
+	# TODO: Add logic to check WorldState on scene load and remove already-picked-up items
+	
+	WorldState.picked_up_items.append(unique_id)
+	print("DEBUG: Added picked up item '%s' to WorldState.picked_up_items." % unique_id)
 	print("Picked up:", item_name, "x", amount)
 	SoundManager.play_sfx("Pick_up")
 	InventoryManager.add_item(item_name, amount)
