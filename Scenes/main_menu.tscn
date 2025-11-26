@@ -60,6 +60,7 @@ texture_hover = ExtResource("2_1ehe0")
 texture_focused = ExtResource("2_1ehe0")
 
 [node name="settings" type="TextureButton" parent="."]
+layout_mode = 0
 offset_left = 112.0
 offset_top = 96.0
 offset_right = 208.0
@@ -70,6 +71,7 @@ texture_hover = ExtResource("6_vr1f0")
 texture_focused = ExtResource("6_vr1f0")
 
 [node name="quit" type="TextureButton" parent="."]
+layout_mode = 0
 offset_left = 112.0
 offset_top = 135.0
 offset_right = 208.0

@@ -1,0 +1,51 @@
+{
+	"Villager1": {
+		"dialog_tree": {
+			"start": {
+				"text": "Hello, adventurer. I seem to have misplaced my sword. Can you help me find it?",
+				"options": [
+					{"text": "Yes, I'll help you.", "next": "accept_quest"},
+					{"text": "Sorry, I'm busy.", "next": "decline_quest"}
+				]
+			},
+			"accept_quest": {
+				"text": "Thank you! I think I left it somewhere in the playground. It's a diamond sword.",
+				"action": "start_quest",
+				"quest_id": "missing_sword",
+				"next": "quest_started"
+			},
+			"decline_quest": {
+				"text": "Ah, that's a shame. Well, if you change your mind, you know where to find me.",
+				"next": "end"
+			},
+			"quest_started": {
+				"text": "Have you found my sword yet?",
+				"options": [
+					{"text": "Not yet.", "next": "end"}
+				]
+			},
+			"has_sword": {
+				"text": "You found my sword! Thank you so much!",
+				"next": "quest_complete"
+			},
+			"quest_complete": {
+				"text": "I can finally get back to practicing my swordsmanship!",
+				"next": "end"
+			},
+			"end": {
+				"text": "..."
+			}
+		}
+	},
+	"Villager2": {
+		"dialog_tree": {
+			"start": {
+				"text": "Hello there! What a beautiful day!",
+				"next": "end"
+			},
+			"end": {
+				"text": "..."
+			}
+		}
+	}
+}

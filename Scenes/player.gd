@@ -41,7 +41,7 @@ func _on_menu_closed():
 	interaction_cooldown.start()
 
 func _process(delta):
-	if DialogManager.dialog_active or InventoryUI.menu_active or EquipmentMenu.menu_active:
+	if DialogManager.dialog_active or InventoryUI.menu_active or EquipmentMenu.menu_active or UIManager.quest_log_active:
 		direction = Vector2.ZERO
 		velocity = Vector2.ZERO
 		UpdateAnimation("idle")

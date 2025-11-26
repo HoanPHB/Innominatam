@@ -13,6 +13,24 @@ func save_game(extra_data: Dictionary = {}) -> Error:
 	# Save InventoryManager data
 	save_data["inventory"] = InventoryManager.inventory
 
+	# Save QuestManager data
+	save_data["quests"] = {}
+	for quest_id in QuestManager.quests:
+		var quest = QuestManager.quests[quest_id]
+		save_data["quests"][quest_id] = {
+			"started": quest.started,
+			"completed": quest.completed,
+			"objectives": []
+		}
+		for objective in quest.objectives:
+			save_data["quests"][quest_id]["objectives"].append({
+				"completed": objective.completed,
+				"current_count": objective.current_count
+			})
+
+	# Save DialogStates data
+	save_data["dialog_states"] = DialogStates.dialog_states
+
 	# Merge extra data
 	for key in extra_data:
 		save_data[key] = extra_data[key]
@@ -65,6 +83,24 @@ func load_game() -> Dictionary:
 		# Load InventoryManager data
 		if save_data.has("inventory"):
 			InventoryManager.inventory = save_data["inventory"]
+
+		# Load QuestManager data
+		if save_data.has("quests"):
+			for quest_id in save_data["quests"]:
+				var saved_quest = save_data["quests"][quest_id]
+				var quest = QuestManager.get_quest(quest_id)
+				if quest:
+					quest.started = saved_quest["started"]
+					quest.completed = saved_quest["completed"]
+					for i in range(quest.objectives.size()):
+						var objective = quest.objectives[i]
+						var saved_objective = saved_quest["objectives"][i]
+						objective.completed = saved_objective["completed"]
+						objective.current_count = saved_objective["current_count"]
+		
+		# Load DialogStates data
+		if save_data.has("dialog_states"):
+			DialogStates.dialog_states = save_data["dialog_states"]
 	
 		# Load WorldState data
 	var loaded_picked_up_items: Array = save_data.get("picked_up_items", [])

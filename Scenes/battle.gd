@@ -792,6 +792,7 @@ func _process_next_event() -> void:
 
 					# If target defeated, disable its button
 					if target_actor.hp <= 0 and target_info_node is TextureButton:
+						Enemies.on_enemy_defeated(target_actor.name)
 						var btn: TextureButton = target_info_node
 						btn.disabled = true
 						#btn.modulate = Color(0.5, 0.5, 0.5)
@@ -847,6 +848,7 @@ func _process_next_event() -> void:
 							SoundManager.play_sfx("Melee_HIT")
 							_apply_damage_feedback(feedback_node)
 						if target_actor.hp <= 0 and target_info_node is TextureButton:
+							Enemies.on_enemy_defeated(target_actor.name)
 							var btn: TextureButton = target_info_node
 							btn.disabled = true
 							btn.focus_mode = Control.FOCUS_NONE

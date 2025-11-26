@@ -32,6 +32,10 @@ func _collect_item(player):
 	print("Picked up:", item_name, "x", amount)
 	SoundManager.play_sfx("Pick_up")
 	InventoryManager.add_item(item_name, amount)
+
+	if unique_id == "DiamondSword1":
+		QuestManager.update_quest_progress("missing_sword", 0)
+
 	$Sprite2D.visible = false
 	_show_pickup_popup()
 

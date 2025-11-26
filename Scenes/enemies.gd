@@ -16,3 +16,8 @@ func _ready() -> void:
 	orc.hp = orc.hp_max
 	data[orc.name] = orc
 	
+func on_enemy_defeated(enemy_name):
+	var quest = QuestManager.get_quest("kill_orcs")
+	if quest and quest.started and not quest.is_completed():
+		if enemy_name == "Orc":
+			QuestManager.update_quest_progress("kill_orcs", 0)

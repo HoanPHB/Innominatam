@@ -19,6 +19,7 @@ func _on_body_entered(body: Node) -> void:
 		
 		# Add this trigger to the list of defeated triggers
 		WorldState.defeated_triggers.append(unique_id)
+		QuestManager.update_kill_quest_progress(unique_id)
 		print("DEBUG: Added battle trigger '%s' to WorldState.defeated_triggers." % unique_id)
 		
 		# Transition to battle
