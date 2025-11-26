@@ -32,5 +32,11 @@ const data = {
         "bonuses": {
             "strength": 20
         }
+    },
+    "health_potion": {
+        "name": "Health Potion",
+        "type": "consumable",
+        "description": "A potion that recovers 50 HP.",
+        "hp_recovery": 50
     }
 }

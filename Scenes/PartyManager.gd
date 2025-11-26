@@ -14,6 +14,9 @@ func _ready():
 		var felix = create_character("Felix", 1, [])
 		var casper = create_character("Casper", 1, ["fireball"])
 		party_members = [prysha, ishamel, felix, casper]
+		for member in party_members:
+			member.hp = member.hp_max / 2
+			member.mp = member.mp_max
 
 func create_character(name: String, level: int, skills: Array) -> BattleActor:
 	var character = BattleActor.new()
@@ -23,7 +26,7 @@ func create_character(name: String, level: int, skills: Array) -> BattleActor:
 	character.stats.level = level
 	character.known_skills = skills
 	character.stats.xp = 0
-	character.stats.xp_to_next_level = level * 100
+	character.stats.xp_to_next_level = level * 200
 
 	match name:
 		"Prysha": # Healer
@@ -72,12 +75,22 @@ func create_character(name: String, level: int, skills: Array) -> BattleActor:
 			character.hp_max = level * 10 + 90
 			character.mp_max = level * 5 + 25
 
-	character.hp = character.hp_max
-	character.mp = character.mp_max
 	return character
 
 func get_party() -> Array:
 	return party_members
+
+func update_party_members(new_party_members: Array) -> void:
+	for i in range(min(party_members.size(), new_party_members.size())):
+		var old_member = party_members[i]
+		var new_member = new_party_members[i]
+		old_member.hp = new_member.hp
+		old_member.mp = new_member.mp
+		old_member.stats = new_member.stats
+		old_member.level = new_member.level
+		old_member.equipment = new_member.equipment
+		old_member.known_skills = new_member.known_skills
+		old_member.is_dead = new_member.is_dead
 
 func add_experience(amount: int):
 	for member in party_members:
@@ -138,5 +151,5 @@ func level_up(member: BattleActor):
 			member.hp_max += 10
 			member.mp_max += 5
 
-	member.hp = member.hp_max
+	member.hp = member.hp_max / 2
 	member.mp = member.mp_max

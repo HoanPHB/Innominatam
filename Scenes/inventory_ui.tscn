@@ -41,3 +41,7 @@ horizontal_alignment = 1
 [node name="ItemList" type="ItemList" parent="Panel/MarginContainer/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
+
+[node name="UseButton" type="Button" parent="Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Use"

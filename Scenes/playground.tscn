@@ -21,7 +21,7 @@ script = ExtResource("1_m3lqc")
 
 [node name="Goblin2" type="Sprite2D" parent="."]
 position = Vector2(-11, -355)
-scale = Vector2(1.5, 1.5)
+scale = Vector2(2, 2)
 texture = ExtResource("3_u4ce8")
 
 [node name="BattleTrigger" type="Area2D" parent="Goblin2"]
@@ -36,7 +36,7 @@ shape = SubResource("RectangleShape2D_qyfof")
 
 [node name="Goblin" type="Sprite2D" parent="."]
 position = Vector2(131, -356)
-scale = Vector2(1.5, 1.5)
+scale = Vector2(2, 2)
 texture = ExtResource("3_u4ce8")
 
 [node name="BattleTrigger" type="Area2D" parent="Goblin"]

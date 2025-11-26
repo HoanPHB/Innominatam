@@ -40,6 +40,7 @@ var player_index: int = 0
 var selecting_all_enemies: bool = false
 var selecting_all_allies: bool = false
 var current_skill_id: String = ""
+var current_item_id: String = ""
 
 # Simple party setup for this scene
 var party_members: Array = [] # Array[BattleActor]
@@ -374,6 +375,15 @@ func _on_turnity_activated_turn(socket: TurnitySocket) -> void:
 			var skill_actor = _get_actor_from_socket(current_active_socket)
 			if skill_actor and skill_actor.known_skills.is_empty():
 				skills_button.disabled = true
+		
+		var items_button = null
+		for b in _options_menu.get_children():
+			if b is BaseButton and b.text == "Items":
+				items_button = b
+				break
+		if items_button:
+			if InventoryManager.inventory.is_empty():
+				items_button.disabled = true
 
 		# Grab focus on the first enabled button
 		for b in _options_menu.get_children():
@@ -406,6 +416,8 @@ func _on_menu_button_pressed(button: BaseButton) -> void:
 		_begin_enemy_selection()
 	elif button.text == "Skills":
 		_show_skill_menu()
+	elif button.text == "Items":
+		_show_item_menu()
 	elif button.text == "Defend":
 		var defending_actor = _get_actor_from_socket(current_active_socket)
 		if defending_actor:
@@ -468,9 +480,13 @@ func _end_enemy_selection(confirmed: bool) -> void:
 
 			# Consume the current player's turn
 			_consume_player_turn(current_active_socket)
+			if _menu_cursor.has_method("set_active"):
+				_menu_cursor.set_active(false)
 
 func _input(event: InputEvent) -> void:
-	if selecting_ally:
+	if _actions_details.visible and event.is_action_pressed("ui_cancel"):
+		_end_action_selection()
+	elif selecting_ally:
 		_handle_ally_selection_input(event)
 	elif selecting_enemies:
 		_handle_enemy_selection_input(event)
@@ -519,7 +535,7 @@ func _end_all_enemies_selection(confirmed: bool):
 		if attacker_actor and skill_data:
 			if not attacker_actor.consume_mp(skill_data.mana_cost):
 				SoundManager.play_sfx("UI_ERROR")
-				_end_skill_selection()
+				_end_action_selection()
 				return
 		for enemy_btn in _get_enemies(): # Iterate over all enemies again to re-check status
 			if not enemy_btn.disabled and not enemy_btn.data.is_dead:
@@ -528,7 +544,9 @@ func _end_all_enemies_selection(confirmed: bool):
 				_create_skill_event(current_skill_id, attacker_actor, enemy_actor, enemy_btn)
 		_process_next_event()
 		_consume_player_turn(current_active_socket)
-		_end_skill_selection()
+		_end_action_selection()
+		if _menu_cursor.has_method("set_active"):
+			_menu_cursor.set_active(false)
 
 func _begin_all_allies_selection():
 	selecting_all_allies = true
@@ -566,7 +584,7 @@ func _end_all_allies_selection(confirmed: bool):
 		if attacker_actor and skill_data:
 			if not attacker_actor.consume_mp(skill_data.mana_cost):
 				SoundManager.play_sfx("UI_ERROR")
-				_end_skill_selection()
+				_end_action_selection()
 				return
 		for i in range(party_members.size()):
 			# Check if the actor has HP
@@ -574,8 +592,9 @@ func _end_all_allies_selection(confirmed: bool):
 				_create_skill_event(current_skill_id, attacker_actor, party_members[i], _players_infos[i])
 		_process_next_event()
 		_consume_player_turn(current_active_socket)
-		_end_skill_selection()
-
+		_end_action_selection()
+		if _menu_cursor.has_method("set_active"):
+			_menu_cursor.set_active(false)
 
 func _handle_ally_selection_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
@@ -691,8 +710,6 @@ func _init_party_members() -> void:
 	for member in party_members:
 		member.hp_max = member.get_effective_stat("hp_max")
 		member.mp_max = member.get_effective_stat("mp_max")
-		member.hp = member.hp_max
-		member.mp = member.mp_max
 
 # Assign created actors to UI bars
 func _assign_party_to_bars() -> void:
@@ -862,6 +879,18 @@ func _process_next_event() -> void:
 							if socket:
 								socket.disable()
 							_play_enemy_death_animation(btn) # Removed await
+			"item":
+				var item_data: Dictionary = evt.get("item_data")
+				var target_actor: BattleActor = evt.get("target", null)
+				var target_info_node: Node = evt.get("target_node", null)
+				
+				if item_data.get("type") == "consumable" and item_data.has("hp_recovery"):
+					SoundManager.play_sfx("Simple_HEAL")
+					var healing_amount = item_data.get("hp_recovery")
+					var hp_change = target_actor.healhurt(healing_amount)
+					var feedback_node = _get_feedback_node(target_info_node)
+					_show_combat_text(feedback_node, healing_amount, true)
+
 	await get_tree().create_timer(5).timeout # Add a short delay here
 	_check_battle_over() # Moved outside the loop
 
@@ -875,6 +904,7 @@ func _check_battle_over() -> void:
 
 	if all_enemies_defeated:
 		PartyManager.add_experience(100)
+		PartyManager.update_party_members(party_members)
 		get_tree().paused = false
 		_victory_screen.show()
 		await get_tree().create_timer(2.0, true).timeout
@@ -891,6 +921,7 @@ func _check_battle_over() -> void:
 			break
 
 	if all_players_defeated:
+		PartyManager.update_party_members(party_members)
 		get_tree().paused = true
 		_defeat_screen.show()
 		await get_tree().create_timer(2.0, true).timeout
@@ -927,14 +958,25 @@ func _end_ally_selection(confirmed: bool) -> void:
 		var attacker_actor = _get_actor_from_socket(current_active_socket)
 		var target_actor = target_player_bar.actor
 
-		_create_skill_event(current_skill_id, attacker_actor, target_actor, target_player_bar)
-		_process_next_event()
-		_consume_player_turn(current_active_socket)
-		_end_skill_selection()
+		if not current_skill_id.is_empty():
+			_create_skill_event(current_skill_id, attacker_actor, target_actor, target_player_bar)
+			_process_next_event()
+			_consume_player_turn(current_active_socket)
+			_end_action_selection()
+		elif not current_item_id.is_empty():
+			var item_data = Items.data.get(current_item_id)
+			if item_data:
+				_create_item_event(current_item_id, target_actor, target_player_bar)
+				InventoryManager.remove_item(current_item_id)
+				_process_next_event()
+				_consume_player_turn(current_active_socket)
+				_end_action_selection()
+				if _menu_cursor.has_method("set_active"):
+					_menu_cursor.set_active(false)
 	else:
-		_end_skill_selection()
+		_end_action_selection()
 
-func _end_skill_selection() -> void:
+func _end_action_selection() -> void:
 	_actions_details.hide()
 	for child in _actions_details.get_node("SkillList").get_children():
 		child.queue_free()
@@ -952,10 +994,20 @@ func _end_skill_selection() -> void:
 	_options_menu.show()
 	if _menu_cursor.has_method("set_active"):
 		_menu_cursor.set_active(true)
-	for btn in _options_menu.get_children():
-		if btn is Button and btn.text == "Skills":
-			btn.grab_focus()
-			break
+
+	if not current_item_id.is_empty():
+		for btn in _options_menu.get_children():
+			if btn is Button and btn.text == "Items":
+				btn.grab_focus()
+				break
+	elif not current_skill_id.is_empty():
+		for btn in _options_menu.get_children():
+			if btn is Button and btn.text == "Skills":
+				btn.grab_focus()
+				break
+	
+	current_item_id = ""
+	current_skill_id = ""
 
 func _create_skill_event(skill_id: String, attacker: BattleActor, target: BattleActor, target_node: Node) -> void:
 	var skill_data = Skills.data.get(skill_id)
@@ -971,6 +1023,18 @@ func _create_skill_event(skill_id: String, attacker: BattleActor, target: Battle
 	}
 	event_queue.append(evt)
 
+func _create_item_event(item_id: String, target: BattleActor, target_node: Node) -> void:
+	var item_data = Items.data.get(item_id)
+	if not item_data:
+		return
+
+	var evt = {
+		"type": "item",
+		"item_data": item_data,
+		"target": target,
+		"target_node": target_node
+	}
+	event_queue.append(evt)
 
 func _show_skill_menu() -> void:
 	var current_actor: BattleActor = _get_actor_from_socket(current_active_socket)
@@ -1001,17 +1065,11 @@ func _show_skill_menu() -> void:
 		child.queue_free()
 
 	if current_actor.known_skills.is_empty():
-		_actions_details.hide()
-		_options_menu.show()
-		# Re-enable menu button focus and enable buttons
-		for btn in _options_menu.get_children():
-			if btn is BaseButton:
-				btn.focus_mode = Control.FOCUS_ALL
-				btn.disabled = false
-		_options_menu.get_child(0).grab_focus() # Focus the first button in the main menu
-		if _menu_cursor.has_method("set_active"):
-			_menu_cursor.set_active(true)
+		var label = Label.new()
+		label.text = "No skills"
+		_actions_details.get_node("SkillList").add_child(label)
 		return
+
 	var skill_buttons: Array[Button] = []
 	# Create and add a button for each known skill
 	for skill_id in current_actor.known_skills:
@@ -1043,6 +1101,55 @@ func _show_skill_menu() -> void:
 		# Grab focus for the first button in the list
 		skill_buttons[0].grab_focus()
 
+func _show_item_menu() -> void:
+	# Hide main menu, show details panel, and activate the cursor for the sub-menu
+	_options_menu.hide()
+	_actions_details.show()
+	if _menu_cursor.has_method("set_active"):
+		_menu_cursor.set_active(true)
+
+	# Disable focus for other UI elements
+	for enemy in _get_enemies():
+		enemy.focus_mode = Control.FOCUS_NONE
+	for btn in _options_menu.get_children():
+		if btn is BaseButton:
+			btn.focus_mode = Control.FOCUS_NONE
+	for player_sprite in _player_sprites:
+		player_sprite.focus_mode = Control.FOCUS_NONE
+
+	# Clear any previous buttons from the details panel
+	for child in _actions_details.get_node("SkillList").get_children():
+		child.queue_free()
+
+	if InventoryManager.inventory.is_empty():
+		var label = Label.new()
+		label.text = "No items"
+		_actions_details.get_node("SkillList").add_child(label)
+		return
+
+	var item_buttons: Array[Button] = []
+	for item_name in InventoryManager.inventory:
+		var item_data = Items.data.get(item_name)
+		if not item_data:
+			continue
+		
+		var item_button = Button.new()
+		item_button.text = item_data.name
+		item_button.pressed.connect(func(): _on_item_selected(item_name))
+		_actions_details.get_node("SkillList").add_child(item_button)
+		item_buttons.append(item_button)
+
+	if not item_buttons.is_empty():
+		if item_buttons.size() > 1:
+			for i in range(item_buttons.size()):
+				var current_button = item_buttons[i]
+				var prev_button = item_buttons[i-1] if i > 0 else item_buttons.back()
+				var next_button = item_buttons[i+1] if i < item_buttons.size() - 1 else item_buttons.front()
+				current_button.focus_neighbor_top = prev_button.get_path()
+				current_button.focus_neighbor_bottom = next_button.get_path()
+				current_button.focus_neighbor_left = NodePath()
+				current_button.focus_neighbor_right = NodePath()
+		item_buttons[0].grab_focus()
 
 func _on_skill_selected(skill_id: String):
 	var skill_data = Skills.data.get(skill_id)
@@ -1068,6 +1175,7 @@ func _on_skill_selected(skill_id: String):
 
 	# Store the skill being used
 	current_skill_id = skill_id
+	current_item_id = ""
 
 	# Begin target selection based on skill type
 	match skill_data.target:
@@ -1082,3 +1190,20 @@ func _on_skill_selected(skill_id: String):
 		"self":
 			# TODO: Implement self-targeting skills
 			pass
+
+func _on_item_selected(item_id: String):
+	var item_data = Items.data.get(item_id)
+	if not item_data:
+		return
+	
+	if _menu_cursor:
+		if _menu_cursor.has_method("set_active"):
+			_menu_cursor.set_active(false)
+		elif _menu_cursor.has_method("hide"):
+			_menu_cursor.hide()
+			
+	current_item_id = item_id
+	current_skill_id = ""
+	
+	if item_data.get("type") == "consumable":
+		_begin_ally_selection()
