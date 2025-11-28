@@ -53,7 +53,6 @@ func _highlight_targets(nodes: Array, on: bool):
 			node.modulate = Color.WHITE
 
 func _ready() -> void:
-	
 	await BattleTransition.fade_out(1.0)
 	# Disable menu and inputs until a player is ready
 	_options_menu.set_enabled(false)
@@ -62,9 +61,10 @@ func _ready() -> void:
 			b.disabled = true
 
 	# Clear any initial focus and hide menu cursor
-	var focus_owner := get_viewport().gui_get_focus_owner()
-	if focus_owner:
-		focus_owner.release_focus()
+	if is_inside_tree() and get_viewport():
+		var focus_owner := get_viewport().gui_get_focus_owner()
+		if focus_owner:
+			focus_owner.release_focus()
 	if _menu_cursor:
 		if _menu_cursor.has_method("set_active"):
 			_menu_cursor.set_active(false)
@@ -74,12 +74,19 @@ func _ready() -> void:
 	_init_party_members()
 	_assign_party_to_bars()
 	_init_enemies()
-	print("Children of _enemies_root: ", _enemies_root.get_children())
+
+	# Explicitly connect menu signals
+	if not _options_menu.button_pressed.is_connected(_on_menu_button_pressed):
+		_options_menu.button_pressed.connect(_on_menu_button_pressed)
+	if not _options_menu.button_focused.is_connected(_on_menu_button_focused):
+		_options_menu.button_focused.connect(_on_menu_button_focused)
 
 	for enemy in enemy_buttons:
 		enemy.modulate.a = 0.0
+		enemy.focus_mode = Control.FOCUS_NONE # Prevent accidental navigation
 	for player in player_buttons:
 		player.modulate.a = 0.0
+		player.focus_mode = Control.FOCUS_NONE # Prevent accidental navigation
 	
 	_victory_screen = victory_screen_scene.instantiate()
 	add_child(_victory_screen)
@@ -236,9 +243,9 @@ func _slide_in_battle_actors() -> void:
 			continue
 
 		var start_pos = enemy_btn.position
-		enemy_btn.position.x = -enemy_btn.size.x
+		enemy_btn.position.x = - enemy_btn.size.x
 		enemy_btn.modulate.a = 1.0
-		tween.tween_property(enemy_btn, "position", start_pos, 0.4)\
+		tween.tween_property(enemy_btn, "position", start_pos, 0.4) \
 			.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_SINE)
 		tween.tween_property(enemy_btn, "modulate:a", 1.0, 0.3)
 
@@ -250,7 +257,7 @@ func _slide_in_battle_actors() -> void:
 		var start_pos = player_btn.position
 		player_btn.position = start_pos + Vector2(get_viewport_rect().size.x, 0)
 		player_btn.modulate.a = 1.0
-		tween.tween_property(player_btn, "position", start_pos, 0.4)\
+		tween.tween_property(player_btn, "position", start_pos, 0.4) \
 			.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_SINE)
 		tween.tween_property(player_btn, "modulate:a", 1.0, 0.3)
 
@@ -289,7 +296,6 @@ func _play_enemy_death_animation(enemy_btn: TextureButton) -> void:
 	enemy_btn.hide()
 
 
-
 func _apply_damage_feedback(node: Node) -> void:
 	# Ensure the node has our custom material
 	if not node.material is ShaderMaterial:
@@ -320,7 +326,17 @@ func _show_combat_text(target_node: Node, amount: int, is_healing: bool = false)
 
 	var fct = fct_scene.instantiate()
 	add_child(fct)
-	fct.global_position = target_node.global_position + Vector2(randf_range(-8, 8), randf_range(-24, -8))
+	
+	# Calculate center position if possible
+	var center_pos = target_node.global_position
+	if target_node is Control:
+		center_pos += target_node.size / 2.0
+	elif target_node is Node2D and "texture" in target_node:
+		var tex = target_node.texture
+		if tex:
+			center_pos += tex.get_size() / 2.0
+
+	fct.global_position = center_pos + Vector2(randf_range(-8, 8), randf_range(-24, -8))
 
 	var value_text = str(abs(amount))
 	fct.show_value(value_text, fct_travel, fct_duration, fct_spread, false)
@@ -364,6 +380,7 @@ func _on_turnity_activated_turn(socket: TurnitySocket) -> void:
 				_menu_cursor.show()
 		_options.show()
 		_options_menu.show() # Ensure the menu is visible
+		_options_menu.set_enabled(true)
 
 		# Disable Skills button if character has no skills
 		var skills_button = null
@@ -430,7 +447,7 @@ func _on_menu_button_pressed(button: BaseButton) -> void:
 
 		_consume_player_turn(current_active_socket)
 	else:
-		print(button.text)
+		pass
 
 func _on_menu_button_focused(button):
 	pass # Replace with function body.
@@ -440,6 +457,7 @@ func _begin_enemy_selection() -> void:
 	var enemies := _get_enemies()
 	if enemies.size() == 0:
 		return
+	_options_menu.set_enabled(false)
 	var start_index := _find_first_selectable_index(enemies)
 	if start_index == -1:
 		# No selectable enemies remain
@@ -457,7 +475,10 @@ func _begin_enemy_selection() -> void:
 	enemies[enemy_index].grab_focus()
 
 func _end_enemy_selection(confirmed: bool) -> void:
+	if not selecting_enemies:
+		return
 	selecting_enemies = false
+	_options_menu.set_enabled(true)
 	for b in _options_menu.get_children():
 		if b is BaseButton:
 			b.disabled = false
@@ -467,6 +488,10 @@ func _end_enemy_selection(confirmed: bool) -> void:
 		if b is BaseButton and not b.disabled:
 			b.grab_focus()
 			break
+	
+	# Reset enemy focus modes
+	for enemy in _get_enemies():
+		enemy.focus_mode = Control.FOCUS_NONE
 
 
 	if confirmed:
@@ -482,24 +507,29 @@ func _end_enemy_selection(confirmed: bool) -> void:
 			_consume_player_turn(current_active_socket)
 			if _menu_cursor.has_method("set_active"):
 				_menu_cursor.set_active(false)
+	else:
+		current_skill_id = ""
+		current_item_id = ""
 
 func _input(event: InputEvent) -> void:
-	if _actions_details.visible and event.is_action_pressed("ui_cancel"):
-		_end_action_selection()
-	elif selecting_ally:
+	if selecting_ally:
 		_handle_ally_selection_input(event)
 	elif selecting_enemies:
 		_handle_enemy_selection_input(event)
 	elif selecting_all_enemies:
 		if event.is_action_pressed("ui_accept"):
 			_end_all_enemies_selection(true)
+			accept_event()
 		elif event.is_action_pressed("ui_cancel"):
 			_end_all_enemies_selection(false)
+			accept_event()
 	elif selecting_all_allies:
 		if event.is_action_pressed("ui_accept"):
 			_end_all_allies_selection(true)
 		elif event.is_action_pressed("ui_cancel"):
 			_end_all_allies_selection(false)
+	elif _actions_details.visible and event.is_action_pressed("ui_cancel"):
+		_end_action_selection()
 
 func _begin_all_enemies_selection():
 	selecting_all_enemies = true
@@ -540,13 +570,16 @@ func _end_all_enemies_selection(confirmed: bool):
 		for enemy_btn in _get_enemies(): # Iterate over all enemies again to re-check status
 			if not enemy_btn.disabled and not enemy_btn.data.is_dead:
 				var enemy_actor = enemy_btn.data as BattleActor
-				print("Creating skill event for enemy: ", enemy_actor.name)
 				_create_skill_event(current_skill_id, attacker_actor, enemy_actor, enemy_btn)
 		_process_next_event()
 		_consume_player_turn(current_active_socket)
 		_end_action_selection()
 		if _menu_cursor.has_method("set_active"):
 			_menu_cursor.set_active(false)
+	else:
+		current_skill_id = ""
+		current_item_id = ""
+		_end_action_selection()
 
 func _begin_all_allies_selection():
 	selecting_all_allies = true
@@ -595,6 +628,20 @@ func _end_all_allies_selection(confirmed: bool):
 		_end_action_selection()
 		if _menu_cursor.has_method("set_active"):
 			_menu_cursor.set_active(false)
+	else:
+		current_skill_id = ""
+		current_item_id = ""
+		_end_action_selection()
+
+func _unhandled_input(event: InputEvent) -> void:
+	if selecting_enemies:
+		_handle_enemy_selection_input(event)
+	elif selecting_ally:
+		_handle_ally_selection_input(event)
+	elif _actions_details.visible:
+		if event.is_action_pressed("ui_cancel"):
+			_end_action_selection()
+			accept_event()
 
 func _handle_ally_selection_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
@@ -615,38 +662,43 @@ func _handle_ally_selection_input(event: InputEvent) -> void:
 				accept_event()
 
 func _handle_enemy_selection_input(event: InputEvent) -> void:
-	if event is InputEventKey and event.pressed and not event.echo:
+	# print("Enemy Selection Input: ", event)
+	if event.is_action_pressed("ui_right") or event.is_action_pressed("ui_down"):
 		var enemies := _get_enemies()
 		if enemies.size() == 0:
 			return
-		match event.keycode:
-			KEY_RIGHT, KEY_DOWN:
-				var attempts := 0
-				while attempts < enemies.size():
-					enemy_index = (enemy_index + 1) % enemies.size()
-					if _is_enemy_selectable(enemies[enemy_index]):
-						enemies[enemy_index].grab_focus()
-						accept_event()
-						break
-					attempts += 1
-			KEY_LEFT, KEY_UP:
-				var attempts := 0
-				while attempts < enemies.size():
-					enemy_index = (enemy_index - 1 + enemies.size()) % enemies.size()
-					if _is_enemy_selectable(enemies[enemy_index]):
-						enemies[enemy_index].grab_focus()
-						accept_event()
-						break
-					attempts += 1
-			KEY_ENTER, KEY_KP_ENTER, KEY_SPACE:
-				_end_enemy_selection(true)
+		var attempts := 0
+		while attempts < enemies.size():
+			enemy_index = (enemy_index + 1) % enemies.size()
+			if _is_enemy_selectable(enemies[enemy_index]):
+				enemies[enemy_index].grab_focus()
 				accept_event()
-			KEY_ESCAPE, KEY_BACKSPACE:
-				_end_enemy_selection(false)
+				break
+			attempts += 1
+	elif event.is_action_pressed("ui_left") or event.is_action_pressed("ui_up"):
+		var enemies := _get_enemies()
+		if enemies.size() == 0:
+			return
+		var attempts := 0
+		while attempts < enemies.size():
+			enemy_index = (enemy_index - 1 + enemies.size()) % enemies.size()
+			if _is_enemy_selectable(enemies[enemy_index]):
+				enemies[enemy_index].grab_focus()
 				accept_event()
+				break
+			attempts += 1
+	elif event.is_action_pressed("ui_accept"):
+		_end_enemy_selection(true)
+		accept_event()
+	elif event.is_action_pressed("ui_cancel"):
+		_end_enemy_selection(false)
+		accept_event()
 
 
 func _consume_player_turn(socket: TurnitySocket) -> void:
+	if not is_inside_tree():
+		return
+		
 	if not socket:
 		return
 
@@ -662,12 +714,14 @@ func _consume_player_turn(socket: TurnitySocket) -> void:
 		atb.reset()
 
 	# Disable menu input and hide the menu cursor
+	_options_menu.set_enabled(false)
 	for b in _options_menu.get_children():
 		if b is BaseButton:
 			b.disabled = true
-	var focus_owner := get_viewport().gui_get_focus_owner()
-	if focus_owner:
-		focus_owner.release_focus()
+	if is_inside_tree() and get_viewport():
+		var focus_owner := get_viewport().gui_get_focus_owner()
+		if focus_owner:
+			focus_owner.release_focus()
 	if _menu_cursor:
 		if _menu_cursor.has_method("set_active"):
 			_menu_cursor.set_active(false)
@@ -690,15 +744,20 @@ func _get_enemies() -> Array[TextureButton]:
 func _is_enemy_selectable(btn: TextureButton) -> bool:
 	return btn and not btn.disabled and btn.focus_mode != Control.FOCUS_NONE
 
-func _find_first_selectable_index(enemies: Array[TextureButton]) -> int:
+func _find_first_selectable_index(enemies: Array) -> int:
 	for i in range(enemies.size()):
-		if _is_enemy_selectable(enemies[i]):
+		var enemy = enemies[i]
+		if not enemy.disabled and enemy.visible:
 			return i
 	return -1
 
 func _on_enemies_button_pressed(button: BaseButton) -> void:
-	# Not used in current flow; selection handled via keyboard
-	pass
+	if selecting_enemies:
+		var enemies = _get_enemies()
+		var idx = enemies.find(button)
+		if idx != -1:
+			enemy_index = idx
+			_end_enemy_selection(true)
 
 func _on_players_button_pressed(button: BaseButton) -> void:
 	# Not used in current flow
@@ -716,27 +775,56 @@ func _assign_party_to_bars() -> void:
 	for i in range(min(party_members.size(), _players_infos.size())):
 		var bar: BattlePlayerbar = _players_infos[i]
 		bar.set_actor(party_members[i])
-		print("Assigned player actor to bar: ", bar.actor.name, " socket.actor: ", bar.socket.actor)
+		# print("Assigned player actor to bar: ", bar.actor.name, " socket.actor: ", bar.socket.actor)
 
 func _init_enemies() -> void:
 	var enemy_nodes = _get_enemies()
 	# Assign actors to enemies - alternating between Orc and Knight
 	for i in range(enemy_nodes.size()):
 		var enemy_btn = enemy_nodes[i]
-		var template_name = "Orc" # Always use Orc for now
+		
+		# Store original center to fix layout issues
+		var original_center = enemy_btn.position + enemy_btn.size / 2.0
+		
+		# Randomly select enemy type
+		var template_name = "Orc" if randf() > 0.5 else "Rat"
 		var enemy_template = Enemies.data[template_name]
 		var enemy_actor = enemy_template.duplicate() # Create a new instance
 		
 		enemy_actor.stats = Stats.new()
 		enemy_actor.level = 1 # Default level for enemies for now
 		enemy_actor.stats.level = enemy_actor.level
-		enemy_actor.stats.strength = enemy_actor.level * 4 + 6
-		enemy_actor.stats.defense = enemy_actor.level * 2 + 8
-		enemy_actor.stats.dexterity = enemy_actor.level * 3 + 4
-		enemy_actor.stats.faith = enemy_actor.level * 1 + 1
-		enemy_actor.stats.intelligence = enemy_actor.level * 1 + 1
-		enemy_actor.stats.speed = enemy_actor.level * 3 + 5
 		
+		var texture_path = ""
+		if template_name == "Orc":
+			texture_path = "res://assets/Orc1.png"
+			enemy_btn.set_meta("cursor_offset", Vector2(20, 0)) # Custom cursor offset for Orc
+			enemy_actor.stats.strength = enemy_actor.level * 4 + 6
+			enemy_actor.stats.defense = enemy_actor.level * 2 + 8
+			enemy_actor.stats.dexterity = enemy_actor.level * 3 + 4
+			enemy_actor.stats.faith = enemy_actor.level * 1 + 1
+			enemy_actor.stats.intelligence = enemy_actor.level * 1 + 1
+			enemy_actor.stats.speed = enemy_actor.level * 3 + 5
+		elif template_name == "Rat":
+			texture_path = "res://assets/rat.png"
+			enemy_actor.stats.strength = enemy_actor.level * 2 + 2 # Weaker
+			enemy_actor.stats.defense = enemy_actor.level * 1 + 2 # Squishy
+			enemy_actor.stats.dexterity = enemy_actor.level * 4 + 8 # Agile
+			enemy_actor.stats.faith = 1
+			enemy_actor.stats.intelligence = 1
+			enemy_actor.stats.speed = enemy_actor.level * 5 + 10 # Very fast
+		
+		var tex = load(texture_path)
+		if tex:
+			enemy_btn.texture_normal = tex
+			# Reset size to match new texture
+			enemy_btn.size = tex.get_size()
+			# Re-center based on original center
+			enemy_btn.position = original_center - enemy_btn.size / 2.0
+			# print("Initialized enemy %s (%s). Texture: %s. Size: %s. Pos: %s" % [i, template_name, texture_path, enemy_btn.size, enemy_btn.position])
+		else:
+			push_error("Failed to load texture for %s: %s" % [template_name, texture_path])
+
 		enemy_actor.hp_max = enemy_actor.get_effective_stat("hp_max")
 		enemy_actor.mp_max = enemy_actor.get_effective_stat("mp_max")
 		enemy_actor.hp = enemy_actor.hp_max # Ensure full health
@@ -750,7 +838,12 @@ func _init_enemies() -> void:
 		# Debug print for enemy socket actor
 		var socket = enemy_btn.get_node_or_null("TurnitySocket")
 		if socket:
-			print("Assigned enemy actor to button: ", enemy_actor.name, " socket.actor: ", socket.actor)
+			pass
+			# print("Assigned enemy actor to button: ", enemy_actor.name, " socket.actor: ", socket.actor)
+		
+		# Connect pressed signal if not already connected
+		if not enemy_btn.pressed.is_connected(_on_enemies_button_pressed):
+			enemy_btn.pressed.connect(_on_enemies_button_pressed.bind(enemy_btn))
 
 # Build and queue an attack event
 func _create_attack_event(attacker_node: Node, target_node: Node) -> void:
@@ -786,7 +879,7 @@ func _create_attack_event(attacker_node: Node, target_node: Node) -> void:
 func _process_next_event() -> void:
 	while not event_queue.is_empty():
 		var evt = event_queue.pop_front()
-		print("Processing event: ", evt)
+		# print("Processing event: ", evt)
 		if typeof(evt) != TYPE_DICTIONARY:
 			continue
 		match evt["type"]:
@@ -856,9 +949,9 @@ func _process_next_event() -> void:
 						var target_defense = target_actor.get_effective_stat("defense")
 						var damage = (skill_data.power + attacker_scaling_stat) - target_defense
 						damage = max(1, int(damage * randf_range(0.9, 1.1)))
-						print("Enemy: ", target_actor.name, ", Calculated Damage: ", damage, ", Attacker Intelligence: ", attacker_scaling_stat, ", Target Defense: ", target_defense)
+						# print("Enemy: ", target_actor.name, ", Calculated Damage: ", damage, ", Attacker Intelligence: ", attacker_scaling_stat, ", Target Defense: ", target_defense)
 						var hp_change = target_actor.take_damage(damage)
-						print("Enemy: ", target_actor.name, ", HP Change: ", hp_change, ", Current HP: ", target_actor.hp)
+						# print("Enemy: ", target_actor.name, ", HP Change: ", hp_change, ", Current HP: ", target_actor.hp)
 						var feedback_node = _get_feedback_node(target_info_node)
 						_show_combat_text(feedback_node, damage, false) # Pass calculated damage and false for is_healing
 						if hp_change < 0:
@@ -974,6 +1067,8 @@ func _end_ally_selection(confirmed: bool) -> void:
 				_consume_player_turn(current_active_socket)
 				_end_action_selection()
 	else:
+		current_skill_id = ""
+		current_item_id = ""
 		_end_action_selection()
 
 func _end_action_selection() -> void:
@@ -981,17 +1076,13 @@ func _end_action_selection() -> void:
 	for child in _actions_details.get_node("SkillList").get_children():
 		child.queue_free()
 
-	# Re-enable enemy focus, but keep defeated enemies unfocusable
-	for enemy in _get_enemies():
-		if not enemy.disabled:
-			enemy.focus_mode = Control.FOCUS_ALL
-
 	# Re-enable menu button focus
 	for btn in _options_menu.get_children():
 		if btn is BaseButton:
 			btn.focus_mode = Control.FOCUS_ALL
 
 	_options_menu.show()
+	_options_menu.set_enabled(true)
 	if _menu_cursor.has_method("set_active"):
 		_menu_cursor.set_active(true)
 
@@ -1042,6 +1133,7 @@ func _show_skill_menu() -> void:
 		return
 
 	# Hide main menu, show details panel, and activate the cursor for the sub-menu
+	_options_menu.set_enabled(false)
 	_options_menu.hide()
 	_actions_details.show()
 	if _menu_cursor.has_method("set_active"):
@@ -1103,6 +1195,7 @@ func _show_skill_menu() -> void:
 
 func _show_item_menu() -> void:
 	# Hide main menu, show details panel, and activate the cursor for the sub-menu
+	_options_menu.set_enabled(false)
 	_options_menu.hide()
 	_actions_details.show()
 	if _menu_cursor.has_method("set_active"):
@@ -1143,8 +1236,8 @@ func _show_item_menu() -> void:
 		if item_buttons.size() > 1:
 			for i in range(item_buttons.size()):
 				var current_button = item_buttons[i]
-				var prev_button = item_buttons[i-1] if i > 0 else item_buttons.back()
-				var next_button = item_buttons[i+1] if i < item_buttons.size() - 1 else item_buttons.front()
+				var prev_button = item_buttons[i - 1] if i > 0 else item_buttons.back()
+				var next_button = item_buttons[i + 1] if i < item_buttons.size() - 1 else item_buttons.front()
 				current_button.focus_neighbor_top = prev_button.get_path()
 				current_button.focus_neighbor_bottom = next_button.get_path()
 				current_button.focus_neighbor_left = NodePath()
@@ -1162,9 +1255,10 @@ func _on_skill_selected(skill_id: String):
 		return
 
 	# Release focus from the skill menu
-	var focus_owner := get_viewport().gui_get_focus_owner()
-	if focus_owner and focus_owner.is_in_group("skill_buttons"): # Assuming skill buttons are in a group
-		focus_owner.release_focus()
+	if is_inside_tree() and get_viewport():
+		var focus_owner := get_viewport().gui_get_focus_owner()
+		if focus_owner and focus_owner.is_in_group("skill_buttons"): # Assuming skill buttons are in a group
+			focus_owner.release_focus()
 	
 	# Deactivate the main menu cursor
 	if _menu_cursor:

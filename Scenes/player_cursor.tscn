@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://r6rc0vdpvoum"]
 
 [ext_resource type="Script" uid="uid://jmokwlg513xu" path="res://Scenes/player_cursor.gd" id="1_c7d2c"]
-[ext_resource type="Texture2D" uid="uid://vdn6ypir8khg" path="res://Assets/player_cursor.png" id="2_pl78x"]
+[ext_resource type="Texture2D" uid="uid://vdn6ypir8khg" path="res://assets/player_cursor.png" id="2_pl78x"]
 
 [node name="PlayerCursor" type="TextureRect"]
 texture = ExtResource("2_pl78x")

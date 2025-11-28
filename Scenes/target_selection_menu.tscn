@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://c5w0p5j1d1h1k"]
 
-[ext_resource type="Script" path="res://Scenes/target_selection_menu.gd" id="1_abcde"]
+[ext_resource type="Script" uid="uid://jmj1qt3xjtk7" path="res://Scenes/target_selection_menu.gd" id="1_abcde"]
 
 [node name="TargetSelectionMenu" type="Panel"]
 anchors_preset = 8

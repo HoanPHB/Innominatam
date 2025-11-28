@@ -15,6 +15,12 @@ func _ready() -> void:
 	orc.hp_max = 40
 	orc.hp = orc.hp_max
 	data[orc.name] = orc
+
+	var rat := BattleActor.new()
+	rat.name = "Rat"
+	rat.hp_max = 20
+	rat.hp = rat.hp_max
+	data[rat.name] = rat
 	
 func on_enemy_defeated(enemy_name):
 	var quest = QuestManager.get_quest("kill_orcs")

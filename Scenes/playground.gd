@@ -48,6 +48,16 @@ func _ready() -> void:
 	# Camera Limits
 	# Camera Limits
 	var tilemap = $"Gentle Forest2"
+	
+	# Restore bounds from WorldState if available
+	if not WorldState.current_zone_bounds_path.is_empty():
+		var saved_node = get_node_or_null(WorldState.current_zone_bounds_path)
+		if saved_node and saved_node is TileMapLayer:
+			print("PLAYGROUND_READY: Restoring saved bounds: %s" % WorldState.current_zone_bounds_path)
+			tilemap = saved_node
+		else:
+			push_warning("PLAYGROUND_READY: Saved bounds node not found or invalid: %s" % WorldState.current_zone_bounds_path)
+	
 	if tilemap:
 		update_bounds(tilemap)
 

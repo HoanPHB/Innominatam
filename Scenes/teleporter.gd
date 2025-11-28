@@ -20,6 +20,9 @@ func _on_body_entered(body: Node2D) -> void:
 		if playground.has_method("update_bounds") and target_bounds:
 			print("Teleporter: Updating bounds...")
 			playground.update_bounds(target_bounds)
+			# Save the bounds path to WorldState
+			WorldState.current_zone_bounds_path = playground.get_path_to(target_bounds)
+			print("Teleporter: Saved bounds path: %s" % WorldState.current_zone_bounds_path)
 		elif not target_bounds:
 			push_warning("Teleporter: No target_bounds assigned!")
 		else:

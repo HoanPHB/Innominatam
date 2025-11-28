@@ -12,7 +12,7 @@
 [ext_resource type="PackedScene" uid="uid://dntejwojb8t3x" path="res://Scenes/item_pickup.tscn" id="10_6hjy0"]
 [ext_resource type="PackedScene" uid="uid://bqsypj0yq0j1w" path="res://Scenes/QuestLog.tscn" id="12_v5c3b"]
 [ext_resource type="PackedScene" uid="uid://dpyxn0nndomxh" path="res://Tile Maps/cave.tscn" id="12_xfd6h"]
-[ext_resource type="PackedScene" path="res://Scenes/teleporter.tscn" id="13_xfd6h"]
+[ext_resource type="PackedScene" uid="uid://b8x7k5y2q4j3n" path="res://Scenes/teleporter.tscn" id="13_xfd6h"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_qyfof"]
 size = Vector2(92.5, 66.5)
@@ -116,7 +116,7 @@ texture = ExtResource("3_u4ce8")
 position = Vector2(-69, 187.5)
 scale = Vector2(0.5, 0.5)
 script = ExtResource("4_qyfof")
-unique_id = "OrcEncounter_2"
+unique_id = "OrcEncounter_3"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Goblin3/BattleTrigger"]
 position = Vector2(131, -376)
@@ -131,14 +131,14 @@ texture = ExtResource("3_u4ce8")
 position = Vector2(-69, 187.5)
 scale = Vector2(0.5, 0.5)
 script = ExtResource("4_qyfof")
-unique_id = "OrcEncounter_2"
+unique_id = "OrcEncounter_4 "
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Goblin4/BattleTrigger"]
 position = Vector2(131, -376)
 shape = SubResource("RectangleShape2D_qyfof")
 
 [node name="Goblin5" type="Sprite2D" parent="."]
-position = Vector2(-4559, 183)
+position = Vector2(-4566, 69)
 scale = Vector2(2, 2)
 texture = ExtResource("3_u4ce8")
 
@@ -146,8 +146,23 @@ texture = ExtResource("3_u4ce8")
 position = Vector2(-69, 187.5)
 scale = Vector2(0.5, 0.5)
 script = ExtResource("4_qyfof")
-unique_id = "OrcEncounter_2"
+unique_id = "OrcEncounter_5"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Goblin5/BattleTrigger"]
 position = Vector2(131, -390)
+shape = SubResource("RectangleShape2D_qyfof")
+
+[node name="Goblin6" type="Sprite2D" parent="."]
+position = Vector2(70.5735, -112.501)
+scale = Vector2(2, 2)
+texture = ExtResource("3_u4ce8")
+
+[node name="BattleTrigger" type="Area2D" parent="Goblin6"]
+position = Vector2(-69, 187.5)
+scale = Vector2(0.5, 0.5)
+script = ExtResource("4_qyfof")
+unique_id = "OrcEncounter_6"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Goblin6/BattleTrigger"]
+position = Vector2(131, -376)
 shape = SubResource("RectangleShape2D_qyfof")
