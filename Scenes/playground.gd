@@ -45,6 +45,49 @@ func _ready() -> void:
 			print("PLAYGROUND_READY: Removing picked up item: %s" % item_node.unique_id)
 			item_node.queue_free()
 
+	# Camera Limits
+	# Camera Limits
+	var tilemap = $"Gentle Forest2"
+	if tilemap:
+		update_bounds(tilemap)
+
+func update_bounds(tilemap: TileMapLayer) -> void:
+	if _player.has_node("Camera2D"):
+		var map_rect = tilemap.get_used_rect()
+		var tile_size = tilemap.tile_set.tile_size
+		var camera = _player.get_node("Camera2D")
+		
+		camera.limit_left = map_rect.position.x * tile_size.x
+		camera.limit_top = map_rect.position.y * tile_size.y
+		camera.limit_right = map_rect.end.x * tile_size.x
+		camera.limit_bottom = map_rect.end.y * tile_size.y
+
+		# Player Limits (Collision)
+		var existing_boundaries = get_node_or_null("MapBoundaries")
+		if existing_boundaries:
+			existing_boundaries.queue_free()
+
+		var static_body = StaticBody2D.new()
+		static_body.name = "MapBoundaries"
+		add_child(static_body)
+		static_body.collision_layer = 16 # Layer 5 (bit 4) -> 16
+		static_body.collision_mask = 0
+		
+		var limits = [
+			[Vector2(map_rect.position.x * tile_size.x, map_rect.position.y * tile_size.y), Vector2(map_rect.end.x * tile_size.x, map_rect.position.y * tile_size.y)], # Top
+			[Vector2(map_rect.end.x * tile_size.x, map_rect.position.y * tile_size.y), Vector2(map_rect.end.x * tile_size.x, map_rect.end.y * tile_size.y)], # Right
+			[Vector2(map_rect.end.x * tile_size.x, map_rect.end.y * tile_size.y), Vector2(map_rect.position.x * tile_size.x, map_rect.end.y * tile_size.y)], # Bottom
+			[Vector2(map_rect.position.x * tile_size.x, map_rect.end.y * tile_size.y), Vector2(map_rect.position.x * tile_size.x, map_rect.position.y * tile_size.y)] # Left
+		]
+		
+		for points in limits:
+			var collision_shape = CollisionShape2D.new()
+			var segment = SegmentShape2D.new()
+			segment.a = points[0]
+			segment.b = points[1]
+			collision_shape.shape = segment
+			static_body.add_child(collision_shape)
+
 
 @onready var _player: Node2D = $Player
 

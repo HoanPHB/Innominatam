@@ -1,0 +1,15 @@
+[gd_scene load_steps=3 format=3 uid="uid://b8x7k5y2q4j3n"]
+
+[ext_resource type="Script" path="res://Scenes/teleporter.gd" id="1_tele"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_tele"]
+size = Vector2(32, 32)
+
+[node name="Teleporter" type="Area2D"]
+collision_layer = 0
+collision_mask = 1
+script = ExtResource("1_tele")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_tele")
+debug_color = Color(0.6, 0.1, 0.8, 0.42)

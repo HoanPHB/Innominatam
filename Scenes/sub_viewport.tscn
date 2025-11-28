@@ -1,4 +1,0 @@
-[gd_scene format=3 uid="uid://7jr5n300fonu"]
-
-[node name="SubViewport" type="SubViewport"]
-size = Vector2i(320, 180)

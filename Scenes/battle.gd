@@ -963,6 +963,8 @@ func _end_ally_selection(confirmed: bool) -> void:
 			_process_next_event()
 			_consume_player_turn(current_active_socket)
 			_end_action_selection()
+			if _menu_cursor.has_method("set_active"):
+				_menu_cursor.set_active(false)
 		elif not current_item_id.is_empty():
 			var item_data = Items.data.get(current_item_id)
 			if item_data:
@@ -971,8 +973,6 @@ func _end_ally_selection(confirmed: bool) -> void:
 				_process_next_event()
 				_consume_player_turn(current_active_socket)
 				_end_action_selection()
-				if _menu_cursor.has_method("set_active"):
-					_menu_cursor.set_active(false)
 	else:
 		_end_action_selection()
 

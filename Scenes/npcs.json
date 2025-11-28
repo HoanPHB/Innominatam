@@ -9,7 +9,7 @@
 				]
 			},
 			"accept_quest": {
-				"text": "Thank you! I think I left it somewhere in the playground. It's a diamond sword.",
+				"text": "Thank you! I think I left it somewhere to the left of the crossroad. It's a diamond sword.",
 				"action": "start_quest",
 				"quest_id": "missing_sword",
 				"next": "quest_started"
