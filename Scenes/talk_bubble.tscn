@@ -1,0 +1,10 @@
+[gd_scene load_steps=3 format=3 uid="uid://dbou0h5q1qiga"]
+
+[ext_resource type="Script" uid="uid://bv1ds6da7aiv1" path="res://Scenes/TalkBubble.gd" id="1_io4vb"]
+[ext_resource type="Texture2D" uid="uid://d7mjv47sbe7j" path="res://assets/Speakbubble.png" id="1_kbal3"]
+
+[node name="TalkBubble" type="Node2D"]
+script = ExtResource("1_io4vb")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("1_kbal3")

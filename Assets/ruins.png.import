@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dvkjje1tflivo"
-path="res://.godot/imported/ruins.png-a59d0b1b5acb588af868d0a8176622f3.ctex"
+path="res://.godot/imported/ruins.png-7e8f33e599c6be0ffa2e96a801d9c3fd.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Assets/ruins.png"
-dest_files=["res://.godot/imported/ruins.png-a59d0b1b5acb588af868d0a8176622f3.ctex"]
+source_file="res://assets/ruins.png"
+dest_files=["res://.godot/imported/ruins.png-7e8f33e599c6be0ffa2e96a801d9c3fd.ctex"]
 
 [params]
 

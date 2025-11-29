@@ -187,33 +187,18 @@ func disconnect_turnity_sockets() -> void:
 
 
 func _connect_socket(socket: TurnitySocket):
-	var connected_signal_emitted = false
-	
-	if not socket.active_turn.is_connected(on_socket_active_turn):
-		socket.active_turn.connect(on_socket_active_turn.bind(socket))
-		turnity_socket_connected.emit(socket)
-		connected_signal_emitted = true
-		
-	if not socket.ended_turn.is_connected(on_socket_ended_turn):
-		socket.ended_turn.connect(on_socket_ended_turn.bind(socket))
-		
-		if not connected_signal_emitted:
-			turnity_socket_connected.emit(socket)
+	socket.active_turn.connect(on_socket_active_turn)
+	socket.ended_turn.connect(on_socket_ended_turn)
+	turnity_socket_connected.emit(socket)
 		
 		
 func _disconnect_socket(socket: TurnitySocket):
-	var disconnected_signal_emitted = false
-	
-	if socket.active_turn.is_connected(on_socket_active_turn):
-		socket.active_turn.disconnect(on_socket_active_turn.bind(socket))
-		turnity_socket_disconnected.emit(socket)
-		disconnected_signal_emitted = true
-		
-	if socket.ended_turn.is_connected(on_socket_ended_turn):
-		socket.ended_turn.disconnect(on_socket_ended_turn.bind(socket))
-		
-		if not disconnected_signal_emitted:
-			turnity_socket_disconnected.emit(socket)
+	if not is_instance_valid(socket):
+		return
+
+	socket.active_turn.disconnect(on_socket_active_turn)
+	socket.ended_turn.disconnect(on_socket_ended_turn)
+	turnity_socket_disconnected.emit(socket)
 		
 		
 ### SIGNAL CALLBACKS ###
@@ -244,3 +229,4 @@ func on_finished():
 	turn_duration = 0
 	max_turns = 0
 	sort_rule = func(a: TurnitySocket, b: TurnitySocket): return a.id > b.id
+	

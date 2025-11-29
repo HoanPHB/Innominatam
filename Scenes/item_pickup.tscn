@@ -1,0 +1,20 @@
+[gd_scene load_steps=4 format=3 uid="uid://dntejwojb8t3x"]
+
+[ext_resource type="Script" uid="uid://1w0da8h6w0k7" path="res://Scenes/item_pickup.gd" id="1_14bl7"]
+[ext_resource type="Texture2D" uid="uid://d27faj5eaye21" path="res://assets/Swordblue.png" id="1_bbo16"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_mcbw2"]
+
+[node name="ItemPickup" type="Area2D" groups=["interactable"]]
+script = ExtResource("1_14bl7")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("1_bbo16")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_mcbw2")
+
+[node name="Label" type="Label" parent="."]
+offset_left = -20.0
+offset_top = -21.0
+offset_right = 20.0

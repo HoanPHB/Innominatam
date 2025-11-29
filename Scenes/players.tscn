@@ -1,0 +1,39 @@
+[gd_scene load_steps=2 format=3 uid="uid://66v3vybyhv5c"]
+
+[ext_resource type="PackedScene" uid="uid://bbeh2pg4xwut0" path="res://Scenes/battle_player.tscn" id="1_nf7lx"]
+
+[node name="Players" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+offset_left = 5.0
+offset_top = -103.0
+offset_right = 161.0
+offset_bottom = -45.0
+
+[node name="BattlePlayer1" parent="." instance=ExtResource("1_nf7lx")]
+layout_mode = 0
+offset_left = 232.0
+offset_top = 19.0
+offset_right = 248.0
+offset_bottom = 35.0
+
+[node name="BattlePlayer2" parent="." instance=ExtResource("1_nf7lx")]
+layout_mode = 0
+offset_left = 241.0
+offset_top = 41.0
+offset_right = 257.0
+offset_bottom = 57.0
+
+[node name="BattlePlayer3" parent="." instance=ExtResource("1_nf7lx")]
+layout_mode = 0
+offset_left = 250.0
+offset_top = 63.0
+offset_right = 266.0
+offset_bottom = 79.0
+
+[node name="BattlePlayer4" parent="." instance=ExtResource("1_nf7lx")]
+layout_mode = 0
+offset_left = 260.0
+offset_top = 83.0
+offset_right = 276.0
+offset_bottom = 99.0

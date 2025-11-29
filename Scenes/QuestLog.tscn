@@ -1,0 +1,44 @@
+[gd_scene load_steps=3 format=3 uid="uid://bqsypj0yq0j1w"]
+
+[ext_resource type="Script" uid="uid://hw0l3yunsgjd" path="res://Scenes/QuestLog.gd" id="1_f5j0h"]
+[ext_resource type="Texture2D" uid="uid://cxg6wnwgw413h" path="res://assets/Ninepatch8x8.png" id="2_abcde"]
+
+[node name="QuestLog" type="CanvasLayer"]
+script = ExtResource("1_f5j0h")
+
+[node name="NinePatchRect" type="NinePatchRect" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -147.0
+offset_top = -78.0
+offset_right = 146.0
+offset_bottom = 78.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_abcde")
+patch_margin_left = 4
+patch_margin_top = 4
+patch_margin_right = 4
+patch_margin_bottom = 4
+
+[node name="MarginContainer" type="MarginContainer" parent="NinePatchRect"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="ScrollContainer" type="ScrollContainer" parent="NinePatchRect/MarginContainer"]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="NinePatchRect/MarginContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3

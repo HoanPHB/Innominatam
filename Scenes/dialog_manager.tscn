@@ -1,0 +1,9 @@
+[gd_scene load_steps=3 format=3 uid="uid://o6a3l8ieyn5r"]
+
+[ext_resource type="Script" uid="uid://ce252hklt0vrn" path="res://Scenes/dialog_manager.gd" id="1_wgaem"]
+[ext_resource type="PackedScene" uid="uid://cwr2r1jtn1udf" path="res://Scenes/dialog_box.tscn" id="2_0tbwh"]
+
+[node name="DialogManager" type="CanvasLayer"]
+script = ExtResource("1_wgaem")
+
+[node name="DialogBox" parent="." instance=ExtResource("2_0tbwh")]

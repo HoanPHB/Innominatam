@@ -3,7 +3,7 @@ class_name Menu extends Container
 signal button_focused(button: BaseButton)
 signal button_pressed(button: BaseButton)
 
-@export var auto_wrap:bool = true
+@export var auto_wrap: bool = true
 
 var index: int = 0
 
@@ -32,12 +32,11 @@ func _ready() -> void:
 	var use_this_on_grid_containers: bool = false
 	
 	if use_this_on_grid_containers and get("columns"):
-		var top_row: Array =[]
+		var top_row: Array = []
 		var bottom_row: Array = []
 		var cols: int = self.columns
 		var rows: int = round(buttons.size() / cols)
 		var btm_range: Array = [rows * cols - cols, rows * cols - 1]
-		
 		
 		
 		#if clear_first:
@@ -48,7 +47,7 @@ func _ready() -> void:
 		#Get top and bottom rows or buttons.
 		for x in cols:
 			top_row.append(buttons[x])
-		for x in range (btm_range [0], btm_range[1] + 1):
+		for x in range(btm_range[0], btm_range[1] + 1):
 			if x > buttons.size():
 				bottom_row.append(buttons[x - cols])
 				continue
@@ -86,11 +85,11 @@ func _ready() -> void:
 func get_buttons() -> Array:
 	return get_children()
 
-func connect_to_buttons(target: Object, _name : String = name) -> void:
+func connect_to_buttons(target: Object, _name: String = name) -> void:
 	var callable: Callable = Callable()
-	callable = Callable(target, "_on_" + _name +"_focused")
+	callable = Callable(target, "_on_" + _name + "_focused")
 	button_focused.connect(callable)
-	callable = Callable(target, "_on_" + _name +"_pressed")
+	callable = Callable(target, "_on_" + _name + "_pressed")
 	button_pressed.connect(callable)
 
 func button_focus(n: int = index) -> void:
@@ -101,15 +100,20 @@ func set_enabled(value: bool) -> void:
 	enabled = value
 	
 func _on_Button_focused(button: BaseButton) -> void:
+	# Sync index with the focused button to prevent desync
+	var btn_index = get_buttons().find(button)
+	if btn_index != -1:
+		index = btn_index
 	emit_signal("button_focused", button)
 	
-func _on_Button_focus_exited(button:BaseButton) -> void:
+func _on_Button_focus_exited(button: BaseButton) -> void:
 	# If menu input is disabled (e.g., selecting enemies), don't reclaim focus
 	if not enabled:
 		return
 	await get_tree().process_frame
+	if not is_inside_tree() or not get_viewport():
+		return
 	if not get_viewport().gui_get_focus_owner() in get_buttons():
-		print("brining focus back")
 		button.grab_focus()
 		
 func _on_Button_pressed(button: BaseButton) -> void:
@@ -121,6 +125,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_DOWN:
 			index = (index + 1) % get_buttons().size()
+			button_focus(index)
 		elif event.keycode == KEY_UP:
 			index = (index - 1 + get_buttons().size()) % get_buttons().size()
-		button_focus(index)
+			button_focus(index)
