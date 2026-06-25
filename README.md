@@ -110,7 +110,7 @@ JSON-based save system (F5 save, F9 load). Preserves:
 - **Engine:** Godot 4.6 (Forward Plus / gl_compatibility renderer)
 - **Resolution:** 320×180 (viewport stretched to window)
 - **Fonts:** BoldPixels, PixelSerif, Silkscreen
-- **Assets:** Aseprite pixel art, original sprites and backgrounds
+- **Assets:** UI elements are original; sprites and backgrounds sourced from free-to-use online repositories
 - **Language:** GDScript
 
 ### Turnity Addon
